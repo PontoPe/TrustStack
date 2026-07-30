@@ -173,3 +173,19 @@ A (overlooker, 1 session)
 ```
 
 Estimate: **7 to 9 repo sessions**, plus overlooker passes between them.
+
+## Autonomous owner entrypoints
+
+For one persistent agent per repository, use these instead of manually passing the
+phase prompts:
+
+| Repository | Owner prompt | Scope |
+|---|---|---|
+| PontoAntiCrack | `prompts/15-pac-autonomous-owner.md` | B1–B8, including bounded lab detonation, remediation, demo and publication |
+| AwLZ | `prompts/16-awlz-autonomous-owner.md` | C1–C7, with a deterministic USD 20 cost rule and lab-only SCP experiment |
+| KateClusters | `prompts/17-kate-autonomous-owner.md` | D1–D3, including snapshot/recovery, demo, CI and publication |
+| ProvenancePipeline | `prompts/18-provenance-autonomous-owner.md` | Preserve the finished state; attempt B5/T9 without weakening admission |
+
+The prompts are resumable through each repo's `docs/PROGRESS.md`. They authorize routine
+actions only inside the named repo and environment; their stop conditions remain the
+security boundary.
