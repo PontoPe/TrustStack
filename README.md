@@ -293,7 +293,7 @@ Traps that have each cost real time:
 - `winget install` takes one package ID per call. `Sigstore.Cosign` installs no shim.
 - Makefiles assume POSIX — Git Bash or WSL.
 - SSH keys with non-default names are ignored unless declared in `~/.ssh/config`.
-- **AWS auth is IAM Identity Center SSO, profile `mgmt`, `sa-east-1`. One-hour sessions.
+- **AWS auth is IAM Identity Center SSO, profile `mgmt`, `sa-east-1`. Twelve-hour sessions.
   There is no static access key anywhere, by design — never introduce one.**
 
 ## 9. What is next
