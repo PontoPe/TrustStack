@@ -15,15 +15,27 @@ The four repositories are **siblings**, not children: `../AwLZ`, `../ProvenanceP
 `../KateClusters`, `../PontoAntiCrack`. Each is its own git repository with its own
 `CLAUDE.md`, handoff, ADRs, and threat model.
 
-## The rule that matters here
+## Scope of a session opened here
 
-**Never write into a sibling repository from this directory.** Reading them is the whole
-point; writing to them from here bypasses their own conventions, CI gates and invariant
-tests. If something needs to change in `KateClusters`, it changes in a session opened in
-`KateClusters`.
+There are two kinds of session, and they have different authority.
 
-The one exception is `README.md` describing what those repos contain — that is reporting,
-not writing.
+**A repo session** is opened *inside* a sibling and does deep work there — building,
+applying, recording. It must not touch the other repos at all.
+
+**An overlooker session** is opened *here* and coordinates across all five directories. It
+may write into siblings, because cross-cutting work genuinely exists: a finding one repo
+makes about another, a stale cross-reference, a convention adopted in one place and owed to
+the rest. That authority comes with one condition, and it is not optional:
+
+> **Before writing into a sibling, read that repo's `CLAUDE.md` and its handoff, and obey
+> its conventions, gates and invariant tests.** Run its validation entrypoint before
+> committing — `make validate`, `tests/repo_invariants.sh`, `pytest`, `terraform validate`,
+> whichever that repo uses. Commit inside that repo, with its author convention. Never a
+> commit that spans two repositories.
+
+An overlooker session does not do a repo's deep work. If a task needs a cluster brought up,
+a stack applied, or a demo recorded, it belongs in a repo session with its own prompt — write
+the prompt into `prompts/` instead of doing the work here.
 
 ## Keeping the handbook honest
 
