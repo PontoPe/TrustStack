@@ -84,7 +84,10 @@ AWS evidence.
       31 resources, three dry-run Lambdas, zero targets/taints. Blocked because the regional
       Lambda quota is 10; three functions reserving 5 each plus the enforced 10 unreserved
       needs 25, and Service Quotas rejects any request below the formal default of 1000.
-      Details at PAC commit `86067a7`.
+      Details at PAC commit `86067a7`. **Decided 2026-07-30:** request the quota at 1000,
+      the only value self-service accepts. A concurrency quota is a ceiling rather than a
+      charge, and `reserved_concurrency = 5` keeps PAC at 15 concurrent executions
+      regardless. Awaiting an AWS session to submit.
 - [ ] **B2** `aws events test-event-pattern` on all three patterns, all 15 fixtures.
       **Gate.** Three load-bearing assumptions die here; a `false` means that detection is
       dead regardless of the 171 tests. **This does not need the quota** — it is a service

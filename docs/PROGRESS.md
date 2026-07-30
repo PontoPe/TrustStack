@@ -105,8 +105,8 @@ exists to provide, and is prohibited.
 1. Start the ProvenancePipeline VM phase; `AMBIENTE: kate LIBERADA` has been emitted.
 2. Re-run the AwLZ C6 Cost Explorer query on or after `2026-08-02T12:00:00-03:00`. Do not
    relabel an estimate as an actual.
-3. Present the PAC quota choice to the operator once, with recommendation and blast radius.
-   Recommendation: submit `L-B99A9384` in `sa-east-1` for 1000. A concurrency quota is a
+3. **Decided 2026-07-30: submit `L-B99A9384` in `sa-east-1` for 1000.** The operator
+   approved the recommendation; the request itself still needs an AWS session. A concurrency quota is a
    ceiling, not a charge; `reserved_concurrency = 5` still caps PAC at 15 concurrent
    executions, and the lab account runs nothing else that scales. The alternatives are worse:
    Premium Support costs money, and dropping the reservation deletes the control ADR-008
