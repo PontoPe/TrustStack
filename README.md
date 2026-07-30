@@ -31,9 +31,9 @@ fourth is empty **on purpose**, because nothing has been proven there yet, and i
 
 | | Commits | Repo | Code | Proven against reality | Evidence |
 |---|---:|---|---|---|---|
-| **AwLZ** | 45 | public | 6 stacks applied to a live AWS org | ✅ SCPs probed, org trail delivering, 5 Config recorders | 3 verification docs |
+| **AwLZ** | 63 | public | 6 stacks applied to a live AWS org | ✅ SCPs probed, org trail delivering, 5 Config recorders, lab control experiment, break-glass alarm fired | 4 verification docs + GIF |
 | **ProvenancePipeline** | 22 | public | CI + admission enforcement | ✅ signed image, attestations, Rekor, **4-case admission demo recorded** | 2 generated docs + GIF |
-| **KateClusters** | 33 | private | cluster built + hardened; release owner active | ✅ CIS 12 FAIL → 0, 4 attack sims with real alerts | 2 kube-bench JSONs; demo in progress |
+| **KateClusters** | 41 | public | cluster built + hardened; released | ✅ CIS 12 FAIL → 0, 4 attack sims with real alerts, CI green 5/5 | 2 kube-bench JSONs + GIF |
 | **PontoAntiCrack** | 21 | private | 3 detections, 171 tests; stable partial apply | ⚠️ 31 resources reconciled; quota blocks targets and detonation | empty, correctly |
 
 52 ADRs across the four. Every scanner suppression carries a written justification.
@@ -95,18 +95,26 @@ AWS, the other never touches it.
 permitted because global services report there regardless.
 
 - 2 OUs, 4 member accounts, **root credentials deleted org-wide** via centralized root access
-- 3 SCPs attached to both OUs, each **probed from inside a member account** — the only way to
+- 4 SCPs attached to both OUs, each **probed from inside a member account** — the only way to
   test an SCP is to be denied by one
 - Org trail → Object Lock COMPLIANCE archive in a separate account
 - GuardDuty + Security Hub CIS + Config across 5 accounts + Access Analyzer, delegated
 - CI: `fmt`, `tflint`, `trivy`, `checkov`, `validate` ×6, plus a real `terraform plan` against
   live AWS via OIDC. `main` requires a PR **and** passing checks
-- Gate baseline: checkov 376 passed / 0 failed / 21 skipped
+- Permission boundaries + a Config rule for T5, and a break-glass alarm for T8 that reached
+  `ALARM` on real recovery-role assumptions rather than a synthetic metric
+- A read-only plan role per member account, so all six stacks plan in CI with no
+  administrator anywhere
+- Gate baseline: checkov 477 passed / 0 failed / 69 skipped
 
-Open: CIS score capture (Security Hub needed ~24h to provision, then the `awlz-lab`
-control-group experiment), cost actuals (needs a billing cycle), GuardDuty member enrollment
-unconfirmed, permission boundaries for T5, break-glass alarm for T8, and a read-only CI role
-per member account so `logging` and `detection` can rejoin the plan matrix.
+The `awlz-lab` control-group experiment is done and its result is negative, which is the
+interesting part: detaching the SCPs from the lab did not move a single one of 35 CIS
+controls, because no CIS v3.0.0 control reads an SCP. A benchmark score measures resource
+configuration; it cannot measure a preventive guardrail. The behavioural probes — denied,
+then allowed, then denied again — are what show the SCPs working.
+
+Open: cost actuals only. Cost Explorer still returns `Estimated: true` for every day this
+organization has existed; earliest defensible retry is 2026-08-02.
 
 ### ProvenancePipeline — supply chain
 
@@ -209,7 +217,7 @@ This is the part that generalises, and the part worth protecting when it gets in
   ProvenancePipeline's `verify` job fails if an *unsigned* digest verifies successfully.
 - **Gates are not negotiable.** No `continue-on-error`, no `soft_fail`, no raised threshold.
   A gate switched off to make a run green is worse than no gate, because it also lies.
-- **Suppressions carry reasons.** All 21 checkov skips in AwLZ and all 6 in PAC have an inline
+- **Suppressions carry reasons.** All 69 checkov skips in AwLZ and all 6 in PAC have an inline
   justification; where the finding is real, a threat-model ID and the stack that closes it.
 - **Provenance markers on unverified data**, enforced mechanically rather than by memory.
 - **Limits are stated in the strong form.** "SLSA L2, not L3." "No multi-tenant isolation is

@@ -101,33 +101,36 @@ Delegation: C1–C3 → `prompts/11-awlz-cost-and-cis-evidence.md`; C4–C5 →
 `prompts/12-awlz-risk-controls-and-ci.md`; C6–C7 →
 `prompts/13-awlz-demo-and-cost-actuals.md`.
 
-- [ ] **C1** Confirm GuardDuty member enrollment; `create-members` if auto-enable did not
-      cover pre-existing accounts. The one control configured but never demonstrated.
-- [ ] **C2** Decide the Security Hub cost lever (`auto_enable_standards`). **Before ~27 Aug.**
-      Either accept a higher ceiling for the evidence, or turn it off and say so in
-      `docs/cost.md`. Decide deliberately, not in response to a 100% budget alert.
-- [ ] **C3** Capture the CIS baseline, then run the `awlz-lab` control-group experiment:
-      detach the SCPs, score, reattach, score. **This is the headline evidence the README
-      promises** and the honest replacement for the "before vs after" that is no longer
-      obtainable.
-- [ ] **C4** Permission boundaries + a Config rule for T5; a CloudWatch alarm on break-glass
-      role assumption for T8. Both are open residual risks in the threat model.
-- [ ] **C5** A read-only role per member account so `live/logging` and `live/detection` can
-      rejoin the CI plan matrix.
-- [ ] **C6** Cost actuals after a billing cycle.
-- [ ] **C7** Demo GIF — the SCP denying from inside a member account is the strongest scene.
+- [x] **C1** GuardDuty enrollment closed. The management account had no regional detector,
+      which is why delegated auto-enable could not reach it; the detector is Terraform-managed
+      and all four members are `Enabled`.
+- [x] **C2** Cost lever decided and applied. Five CIS subscriptions project USD 24.77/month
+      jointly against a USD 20 ceiling, so CIS is retained in `awlz-security` only and
+      future-account auto-enable is `NONE` — USD 13.73 projected, stated in `docs/cost.md`.
+- [x] **C3** Control experiment run and reversed inside a 5m20s window on `awlz-lab` alone.
+      The honest result is negative and is published as one: the CIS score is identical
+      control by control with and without the SCPs, because no CIS v3.0.0 control reads an
+      SCP. The behavioural probes are what show the guardrails working.
+- [x] **C4** Permission boundaries, the Config rule and the `require-permissions-boundary`
+      SCP are live in four accounts; the T8 alarm moved to `ALARM` on real recovery-role
+      assumptions rather than a synthetic metric. Both residual risks in the threat model
+      are rewritten to what is now true.
+- [x] **C5** `awlz-gha-plan-readonly` exists per member account. All six stacks — including
+      `live/logging`, `live/detection` and `live/ci-oidc` — plan green in CI through OIDC
+      with no administrator anywhere.
+- [ ] **C6** Cost actuals. Cost Explorer still returns `Estimated: true`; earliest defensible
+      retry is **2026-08-02T12:00:00-03:00** for the 28 Jul–1 Aug window.
+- [x] **C7** Demo recorded, audited as text and inspected as pixels: the plan role allowed on
+      a Config read and explicitly denied on a Config write by its boundary.
 
-## D. KateClusters — nearly there
+## D. KateClusters — done
 
 Delegation: D1–D3 → `prompts/14-kate-demo-ci-public.md`.
 
-- [~] **D1** Demo GIF. Owner active on `codex/release-d1-d3`. Terminal-native scenes:
-      `kube-bench` delta, PSA rejecting with a real
-      403, a Falco line firing. For the Grafana alert, query the API and show the state
-      transition as JSON rather than screen-recording a browser — stronger evidence and
-      re-recordable.
-- [ ] **D2** Run CI once so kubescape and polaris stop being unverified.
-- [ ] **D3** Repo public.
+- [x] **D1** Deterministic demo recorded — `docs/img/demo.gif` and `demo.cast`.
+- [x] **D2** CI green 5/5 on `main`, so kubescape and polaris are no longer unverified.
+- [x] **D3** Repository public, 123/123 links valid, history rewritten and rescanned across
+      38 commits with no secret detected. PR #1 merged; VM `kate` released.
 
 ## E. ProvenancePipeline — done, with one choice
 
@@ -169,9 +172,9 @@ Prove what is built before closing any of these.
 
 ```text
 PAC       paused at B1 quota decision; awlz-lab released
-AwLZ      may start C1–C7 now
-Kate      active at D1; holds VM kate
-Provenance local audit may run; VM phase waits for Kate release
+AwLZ      C1-C5 and C7 merged; only C6 open, blocked until 2026-08-02
+Kate      D1-D3 complete and public; VM kate released
+Provenance VM phase unblocked
 ```
 
 Owners are persistent; estimates are no longer session counts. The overlooker advances the
