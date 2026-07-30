@@ -69,13 +69,40 @@ The AwLZ boundary Config rule reports `pac-sg-open-remediation`,
 preventive SCP only governs roles created from now on — but the PontoAntiCrack owner
 should decide whether to adopt the boundary or record an exception.
 
+## What finishing the program now requires
+
+Three of the four layers meet the definition of finished. PontoAntiCrack is the whole
+remaining program, and it is not blocked as thoroughly as the previous handoff implied.
+
+| Step | Needs the Lambda quota? | Needs an AWS session? |
+|---|---|---|
+| B2 — `test-event-pattern` on 3 patterns × 15 fixtures | no | yes |
+| B3 — capture real CloudTrail events, replace fixtures, re-run suite | no | yes |
+| B4 — Stratus detonation with `dry_run=true`, assert alert | **yes** | yes |
+| B5–B6 — live remediation, time-to-remediate, circuit breaker | **yes** | yes |
+| B7–B8 — evidence, demo, publication | no | only to regenerate evidence |
+
+B2 is the gate that carries the most risk in the whole portfolio: three load-bearing
+assumptions about CloudTrail event shape die there, and no unit test can settle them
+because the authoritative evaluator is the EventBridge service itself. It costs nothing,
+mutates nothing, and does not need the quota. It should be the first thing run.
+
+The quota blocks only the wiring: three Lambdas reserving 5 each, plus the 10 unreserved
+executions AWS enforces, needs an applied quota of 25 in `sa-east-1`. The applied value is
+10 and Service Quotas refuses any request below the formal default of 1000. Reducing or
+removing `reserved_concurrency = 5` would close this by deleting the control ADR-008
+exists to provide, and is prohibited.
+
 ## Next concrete actions
 
 1. Start the ProvenancePipeline VM phase; `AMBIENTE: kate LIBERADA` has been emitted.
 2. Re-run the AwLZ C6 Cost Explorer query on or after `2026-08-02T12:00:00-03:00`. Do not
    relabel an estimate as an actual.
-3. Present the PAC quota choice to the operator once, with recommendation and blast radius;
-   leave PAC paused and stable until explicit authority changes. Hand the boundary finding
-   above to that owner when it resumes.
+3. Present the PAC quota choice to the operator once, with recommendation and blast radius.
+   Recommendation: submit `L-B99A9384` in `sa-east-1` for 1000. A concurrency quota is a
+   ceiling, not a charge; `reserved_concurrency = 5` still caps PAC at 15 concurrent
+   executions, and the lab account runs nothing else that scales. The alternatives are worse:
+   Premium Support costs money, and dropping the reservation deletes the control ADR-008
+   exists to provide. Hand the AwLZ boundary finding above to that owner when it resumes.
 4. After each owner result, verify repo/evidence/cleanup, then update ROADMAP, README and
    this file.

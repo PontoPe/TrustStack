@@ -26,10 +26,13 @@ Nothing here requires zero open gaps. See "Not incompleteness" below.
 
 | Layer | Code | Evidence | Demo | Public | Remaining |
 |---|---|---|---|---|---|
-| ProvenancePipeline | ✅ | ✅ | ✅ | ✅ | essentially none |
-| KateClusters | ✅ | ✅ | in progress | ❌ | owner active: GIF, real CI run, go public |
-| AwLZ | ✅ | partial | ❌ | ✅ | GuardDuty/CIS/cost evidence, T5/T8 |
-| PontoAntiCrack | partial apply | ❌ | ❌ | ❌ | Lambda quota, finish apply, then B2–B8 |
+| ProvenancePipeline | ✅ | ✅ | ✅ | ✅ | none; E1 is optional |
+| KateClusters | ✅ | ✅ | ✅ | ✅ | none |
+| AwLZ | ✅ | ✅ | ✅ | ✅ | C6 cost actuals, blocked until 2026-08-02 |
+| PontoAntiCrack | partial apply | ❌ | ❌ | ❌ | B2–B8; only B4 onward needs the Lambda quota |
+
+**Three of four layers meet the definition of finished.** PontoAntiCrack is the whole
+remaining program.
 
 Regenerate with `pwsh scripts/status.ps1 -Markdown`. Never type these numbers by hand.
 
@@ -73,13 +76,17 @@ AWS evidence.
 
 - [~] **B1** `make build` → plan → apply with `dry_run = true`. Partial apply is stable:
       31 resources, three dry-run Lambdas, zero targets/taints. Blocked because the regional
-      Lambda quota is 10; the technical requirement is 25 but official self-service accepts
-      only a request of at least 1000. Details at PAC commit `86067a7`.
-- [ ] **B2** `aws events test-event-pattern` on all three patterns. **Gate.** Three
-      load-bearing assumptions die here; a `false` means that detection is dead regardless of
-      the 167 tests. Nothing downstream proceeds until this passes.
+      Lambda quota is 10; three functions reserving 5 each plus the enforced 10 unreserved
+      needs 25, and Service Quotas rejects any request below the formal default of 1000.
+      Details at PAC commit `86067a7`.
+- [ ] **B2** `aws events test-event-pattern` on all three patterns, all 15 fixtures.
+      **Gate.** Three load-bearing assumptions die here; a `false` means that detection is
+      dead regardless of the 171 tests. **This does not need the quota** — it is a service
+      API call against committed fixtures and needs only an AWS session. Run it first.
 - [ ] **B3** Capture real CloudTrail events, replace all 15 fixtures, flip the provenance
-      markers, re-run the suite.
+      markers, re-run the suite. **Also quota-independent**: it generates events with plain
+      API calls in the lab and reads them from the AwLZ organization trail. Only B4 onward
+      needs the Lambdas actually wired to EventBridge.
 - [ ] **B4** Detonate with Stratus, `dry_run` still true. Assert alert + audit snapshot +
       resource unchanged.
 - [ ] **B5** `dry_run = false`, lab account only, re-detonate, measure time-to-remediate.
@@ -171,10 +178,10 @@ Prove what is built before closing any of these.
 ## Current execution order
 
 ```text
-PAC       paused at B1 quota decision; awlz-lab released
+PAC       B2 and B3 runnable as soon as an AWS session exists; B4-B8 need the quota
 AwLZ      C1-C5 and C7 merged; only C6 open, blocked until 2026-08-02
 Kate      D1-D3 complete and public; VM kate released
-Provenance VM phase unblocked
+Provenance complete; E1 optional and not required to finish
 ```
 
 Owners are persistent; estimates are no longer session counts. The overlooker advances the
