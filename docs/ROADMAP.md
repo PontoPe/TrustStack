@@ -40,6 +40,12 @@ Regenerate with `pwsh scripts/status.ps1 -Markdown`. Never type these numbers by
 
 ## A. Cross-cutting — overlooker does these
 
+- [x] **A11** PontoAntiCrack CI repaired. `check-detection-coverage.sh` and
+      `build-lambda.sh` were mode 644, so every run exited 126 before a gate executed, and
+      `aquasecurity/trivy-action@0.28.0` no longer resolved. Both fixed at PAC `e796ecf`,
+      which is the first green run in that repository. `make patterns` was added so the B2
+      gate is one command.
+
 - [x] **A1** AwLZ handbook rename finished and merged in
       [PR #8](https://github.com/PontoPe/AwLZ/pull/8); `main` is clean.
 - [x] **A2** Empty `live/security/` and `live/workload-dev/` scaffolds removed in PR #8.

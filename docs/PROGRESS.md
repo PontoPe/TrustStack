@@ -10,6 +10,13 @@ for the next overlooker.
 
 ### PontoAntiCrack
 
+- CI was red on every push and neither cause was the quota: two shell gates were
+  committed mode 644, so the runner exited 126 before any gate ran, and
+  `aquasecurity/trivy-action@0.28.0` had stopped resolving. Both fixed; CI is green at
+  PAC `e796ecf`. The consequence worth noting is that the gate refusing a detection
+  without a negative test had never actually executed in CI.
+- `make patterns` now runs the B2 gate in one command against all fifteen fixtures.
+
 - Owner completed recovery and emitted `AMBIENTE: awlz-lab LIBERADO`.
 - B1 is partially applied, not complete. Terraform tracks 31 stable resources, including
   three Lambdas in `lab` with `dry_run=true`; zero EventBridge targets and zero taints.
