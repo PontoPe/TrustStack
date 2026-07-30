@@ -31,12 +31,12 @@ fourth is empty **on purpose**, because nothing has been proven there yet, and i
 
 | | Commits | Repo | Code | Proven against reality | Evidence |
 |---|---:|---|---|---|---|
-| **AwLZ** | 39 | public | 6 stacks applied to a live AWS org | ✅ SCPs probed, org trail delivering, 5 Config recorders | 3 verification docs |
-| **ProvenancePipeline** | 19 | public | CI + admission enforcement | ✅ signed image, attestations, Rekor, **4-case admission demo recorded** | 2 generated docs + GIF |
-| **KateClusters** | 29 | private | cluster built + hardened | ✅ CIS 12 FAIL → 0, 4 attack sims with real alerts | 2 kube-bench JSONs |
-| **PontoAntiCrack** | 15 | private | 3 detections, 167 tests | ❌ never applied, nothing detonated | empty, correctly |
+| **AwLZ** | 41 | public | 6 stacks applied to a live AWS org | ✅ SCPs probed, org trail delivering, 5 Config recorders | 3 verification docs |
+| **ProvenancePipeline** | 22 | public | CI + admission enforcement | ✅ signed image, attestations, Rekor, **4-case admission demo recorded** | 2 generated docs + GIF |
+| **KateClusters** | 30 | private | cluster built + hardened | ✅ CIS 12 FAIL → 0, 4 attack sims with real alerts | 2 kube-bench JSONs |
+| **PontoAntiCrack** | 16 | private | 3 detections, 167 tests | ❌ never applied, nothing detonated | empty, correctly |
 
-49 ADRs across the four. Every scanner suppression carries a written justification.
+52 ADRs across the four. Every scanner suppression carries a written justification.
 
 ## 3. How they interlock
 
@@ -64,7 +64,7 @@ flowchart TB
     ORG -->|org trail + lab account| PAC
     LAB -.->|Stratus detonation target| PAC
     CI --> REG
-    REG -->|Kyverno verifyImages<br/>NOT BUILT YET| K8S
+    REG -->|Kyverno verifyImages<br/>Enforce + failurePolicy Fail| K8S
     K8S --> DET
 
     classDef todo stroke-dasharray: 5 5
@@ -77,8 +77,8 @@ Two real dependencies, and both are one-directional:
    in are both AwLZ resources. It cannot be meaningfully built before AwLZ's logging exists —
    and AwLZ's logging does exist, so PAC is unblocked as of now.
 2. **ProvenancePipeline enforces on KateClusters.** The Kyverno policy belongs to
-   ProvenancePipeline; the cluster it admits into belongs to KateClusters. The cluster now
-   exists, so this is the shortest remaining path to a finished artefact.
+   ProvenancePipeline; the cluster it admits into belongs to KateClusters. That integration
+   is complete: one signed image is admitted and three deny paths are recorded.
 
 Nothing else couples. AwLZ and KateClusters were built in parallel on purpose — one waits on
 AWS, the other never touches it.
@@ -142,6 +142,11 @@ The demo runs four cases, and the last two are what make it worth watching:
 Honest limit stated in the repo: **SLSA Build L2, not L3.** The provenance predicate is
 assembled in the same job that builds the image, so anything compromising that job can write
 its own provenance. L3 needs `slsa-github-generator` in an isolated context.
+
+**Active T9:** ADR-005's original enforcement assumption was backwards; ADR-009 records that
+Kyverno can discover GitHub's provenance bundle on GHCR, not cosign's. That GitHub step is
+gated on the repo staying public, so making it private denies every subsequently built image
+at admission. E1 can close the coupling with cosign 2.x; leaving the risk stated is allowed.
 
 ### KateClusters — hardened cluster + detection
 
@@ -279,7 +284,7 @@ Traps that have each cost real time:
 - **Nothing is on `PATH` in a fresh shell.** `terraform`, `tflint`, `trivy`, `shellcheck` live
   under `%LOCALAPPDATA%\Microsoft\WinGet\Packages\<Vendor>.<Tool>_*\`; `ruff`, `mypy`,
   `pytest`, `checkov` under `%LOCALAPPDATA%\Python\pythoncore-3.14-64\Scripts`. `python -m
-  <tool>` always works. `vmrun` is at `C:\Program Files (x86)\VMware\VMware Workstation\`.
+  <tool>` always works. `vmrun` is at `C:\Program Files\VMware\VMware Workstation\`.
 - **PowerShell `&&` short-circuits.** A chained version check stops at the first failure and
   the rest silently never run — this produced a false "aws CLI is missing".
 - `terraform -chdir=$var` does not expand the variable in PowerShell. Use `Set-Location`.
@@ -293,50 +298,34 @@ Traps that have each cost real time:
 
 ## 9. What is next
 
-Ordered by value per hour, with the gate for each.
+The deep-work queue is already encoded as prompts 08–14, with the gate for each.
 
 | # | Work | Gate | Repo |
 |---|---|---|---|
-| 1 | Kyverno install + `verifyImages` policy + allow/deny tests + **the demo GIF** | none — cluster exists | ProvenancePipeline |
-| 2 | Confirm GuardDuty member enrollment; `create-members` if auto-enable didn't cover existing accounts | none | AwLZ |
-| 3 | Decide the Security Hub cost lever | before ~27 Aug | AwLZ |
-| 4 | CIS baseline + the `awlz-lab` control-group experiment | Security Hub settled | AwLZ |
-| 5 | `make build` → plan → apply with `dry_run = true` → **`aws events test-event-pattern` on all three patterns** | none | PontoAntiCrack |
-| 6 | Capture real CloudTrail events, replace all 15 fixtures, flip the provenance markers | after 5 | PontoAntiCrack |
-| 7 | Permission boundaries + Config rule (T5), break-glass alarm (T8) | none | AwLZ |
-| 8 | Cost actuals | a billing cycle | AwLZ |
+| 1 | Apply PAC in dry-run; authoritative test of all three patterns | prompt 08; any `false` stops | PontoAntiCrack |
+| 2 | Replace all 15 fixtures from observed CloudTrail; dry-run detonations | prompt 09; after pattern gate | PontoAntiCrack |
+| 3 | Live lab remediation, breaker, evidence, demo, public release | prompt 10; after real fixtures | PontoAntiCrack |
+| 4 | GuardDuty enrollment, Security Hub cost choice, CIS lab experiment | prompt 11; decide before ~27 Aug | AwLZ |
+| 5 | Permission boundaries/Config T5, break-glass T8, read-only CI roles | prompt 12 | AwLZ |
+| 6 | AwLZ demo and billing actuals | prompt 13; actuals need closed cycle | AwLZ |
+| 7 | Kate demo, real CI run, public release | prompt 14 | KateClusters |
 
-**Item 1 is the highest-value hour available.** It finishes the artefact that
-ProvenancePipeline's own handoff calls the deliverable of the whole project, it needs no new
-infrastructure, and a bad admission policy is one snapshot revert away.
-
-**Do not go past item 5 into live remediation without item 6.** Turning on auto-remediation
+**Do not enter live PAC remediation before the fixtures are real.** Turning on auto-remediation
 while the patterns are unconfirmed means a system that might not fire, or might fire on the
 wrong resource, holding write access to AWS.
 
-## 10. Loose ends to tidy
+## 10. Cross-cutting pass
 
-Small, and all on repos that are or will be public.
+Closed 2026-07-30: all sibling trees clean and pushed; AwLZ handbook rename finished; empty
+stack scaffolds removed; its handoff is in-repo; KateClusters' namespace-scoped default-deny
+and `AlwaysPullImages` posture are explicit; stale state/path/ADR references corrected;
+`AGENTS.md` is canonical in all four repos; recording gates were added and deliberately
+tested in AwLZ, KateClusters and PontoAntiCrack.
 
-- **AwLZ has an uncommitted rename** — `docs/project-handbook.md` deleted,
-  `docs/AwLZ-handbook.md` untracked. The working tree is dirty on a public repo.
-- **AwLZ `live/security/` and `live/workload-dev/` contain only `.gitkeep`.** Leftover
-  scaffold from before the real structure existed. On a public repo an empty stack directory
-  reads as abandoned work. Delete them or fill them.
-- **AwLZ is the only repo whose handoff lives outside the repo** (in Nextcloud). The other
-  three carry `PROVEhandoff.md`, `KATEhandoff.md`, `PAChandoff.md`. The consolidated
-  narrative — especially the traps in §6 — is the most reviewer-legible thing the project
-  produced, and it is the one page a public repo is missing.
-- **The GHCR package is private** while the repo is public. The whole value of public keyless
-  signing is that a third party can verify it themselves, and they currently cannot pull the
-  digest the evidence names. Owner has authorised making it public; it is a UI-only change at
-  `github.com/users/PontoPe/packages/container/provenancepipeline/settings`. Flipping it makes
-  several doc claims true that are currently aspirational, and ADR-005 plus the handoff notes
-  will need updating.
-- **KateClusters has 2 unpushed commits.**
-- **`docs/img/` is still empty in three repos.** AwLZ, KateClusters and PontoAntiCrack each
-  reference a demo GIF that does not exist — broken images, and AwLZ is public. The recipe
-  now exists (below), so this is work, not research.
+What remains is deep evidence work, not hygiene: demos in those three repos, public release
+for KateClusters and PontoAntiCrack, PAC's first real apply/evidence, and AwLZ's pending
+GuardDuty/CIS/cost controls. ProvenancePipeline's T9 visibility coupling remains an explicit,
+optional risk.
 
 ---
 
@@ -372,10 +361,10 @@ than the whole block.
 ## Reading order for someone new
 
 1. This file.
-2. The per-repo handoff: `AwLZ` — Nextcloud `AwLZ-pres.md`; others —
+2. The per-repo handoff: `AwLZ/docs/AwLZ-handbook.md`; others —
    `docs/{PROVE,KATE,PAC}handoff.md`.
 3. `docs/architecture.md` in the repo you care about — read it before disagreeing with a
    design choice; the reasoning is probably already there.
 4. `docs/threat-model.md` — threats with likelihood, impact, and **residual risk**.
 5. `docs/evidence/` — what was actually proven.
-6. `CLAUDE.md` — conventions, environment traps, and the decisions not to relitigate.
+6. `AGENTS.md` — conventions, environment traps, and the decisions not to relitigate.

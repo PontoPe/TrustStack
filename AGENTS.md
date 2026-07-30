@@ -109,7 +109,7 @@ Windows 11 workstation, PowerShell 7. One Debian VM (`ssh kate`) hosts the clust
 - **Nothing is on `PATH` in a fresh shell.** Tools live under
   `%LOCALAPPDATA%\Microsoft\WinGet\Packages\<Vendor>.<Tool>_*\` and
   `%LOCALAPPDATA%\Python\pythoncore-3.14-64\Scripts`. `python -m <tool>` always works.
-  `vmrun` is at `C:\Program Files (x86)\VMware\VMware Workstation\`.
+  `vmrun` is at `C:\Program Files\VMware\VMware Workstation\`.
 - **PowerShell `&&` short-circuits** — a chained check stops at the first failure and the
   rest silently never run.
 - `terraform -chdir=$var` does not expand the variable in PowerShell. Use `Set-Location`.

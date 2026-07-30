@@ -27,8 +27,8 @@ Nothing here requires zero open gaps. See "Not incompleteness" below.
 | Layer | Code | Evidence | Demo | Public | Remaining |
 |---|---|---|---|---|---|
 | ProvenancePipeline | ✅ | ✅ | ✅ | ✅ | essentially none |
-| KateClusters | ✅ | ✅ | ❌ | ❌ | GIF, posture doc, go public |
-| AwLZ | ✅ | partial | ❌ | ✅ | the CIS evidence it promises |
+| KateClusters | ✅ | ✅ | ❌ | ❌ | GIF, real CI run, go public |
+| AwLZ | ✅ | partial | ❌ | ✅ | GuardDuty/CIS/cost evidence, T5/T8 |
 | PontoAntiCrack | written only | ❌ | ❌ | ❌ | everything that makes it real |
 
 Regenerate with `pwsh scripts/status.ps1 -Markdown`. Never type these numbers by hand.
@@ -37,40 +37,41 @@ Regenerate with `pwsh scripts/status.ps1 -Markdown`. Never type these numbers by
 
 ## A. Cross-cutting — overlooker does these
 
-- [ ] **A1** AwLZ working tree is dirty on a public repo — the half-done handbook rename
-      (`docs/project-handbook.md` deleted, `docs/AwLZ-handbook.md` untracked). Finish or revert.
-- [ ] **A2** `AwLZ/live/security/` and `AwLZ/live/workload-dev/` hold only `.gitkeep`.
-      Scaffold left over from before the real structure. Delete, or justify in a README.
-- [ ] **A3** KateClusters has unpushed commits. Push.
-- [ ] **A4** AwLZ is the only repo whose handoff lives outside it (Nextcloud `AwLZ-pres.md`).
-      Bring a version in-repo; the traps section is the most reviewer-legible page the
-      project produced and the public repo is missing it.
-- [ ] **A5** KateClusters posture is imprecise: default-deny is **per namespace**, with no
-      Calico `GlobalNetworkPolicy`, so a fresh namespace is fully open. The docs imply
-      otherwise. Correct the docs and threat model; record `GlobalNetworkPolicy` as future
-      work. *(Found by the ProvenancePipeline session installing Kyverno.)*
-- [ ] **A6** `AlwaysPullImages` is enabled in KateClusters and undocumented there. Decide
-      where the ADR lives and write it.
-- [ ] **A7** Propagate `demo-record.sh` to AwLZ, KateClusters, PontoAntiCrack with a
-      context-specific `DENY_PATTERNS`, and **test each deliberately** — an audit that never
-      fires means a weak pattern list, not a clean recording.
-- [ ] **A8** Contradiction sweep across the four repos: dead file paths, "blocked" states
-      that have unblocked, stale ADR counts, "not built" about things now built.
-- [ ] **A9** Keep `TrustStack/README.md` accurate — numbers generated, ADR-005 inversion and
-      threat T9 reflected as active risk.
-- [ ] **A10** Make the agent instructions vendor-neutral in all four sibling repos, the way
-      `TrustStack/` now is: move the content of each `CLAUDE.md` into `AGENTS.md`, and leave
-      `CLAUDE.md` and `AGENT.md` as one-line pointers. **Do not duplicate the content** — a
-      second copy drifts. Do this inside each repo, under that repo's conventions, and run
-      its validation before committing. Reason: the project should not be tied to one
-      vendor's agent, and `AGENTS.md` is the name the widest range of tools reads.
+- [x] **A1** AwLZ handbook rename finished and merged in
+      [PR #8](https://github.com/PontoPe/AwLZ/pull/8); `main` is clean.
+- [x] **A2** Empty `live/security/` and `live/workload-dev/` scaffolds removed in PR #8.
+- [x] **A3** KateClusters' two pending commits and the reconciliation commit were pushed;
+      `main` is clean and aligned with `origin/main`.
+- [x] **A4** `docs/AwLZ-handbook.md` is the content-identical in-repo copy of the former
+      Nextcloud handoff; SHA-256 equality was checked before merge.
+- [x] **A5** KateClusters posture corrected: default-deny is **per namespace**, with no
+      Calico `GlobalNetworkPolicy`, so a fresh namespace is fully open. README, architecture,
+      NetworkPolicy docs and threat model now say so and record global default-deny as the
+      closing condition. Verified by `make validate` at commit `242b5e1`.
+- [x] **A6** Roadmap was stale: `AlwaysPullImages` was already accepted in KateClusters
+      ADR-004 and referenced by `kubeadm-config.yaml`; README/threat model now expose its
+      exact role and limit.
+- [x] **A7** Propagated `demo-record.sh` to AwLZ, KateClusters and PontoAntiCrack with
+      context-specific `DENY_PATTERNS`. Each script passed syntax,
+      a context leak probe, and a safe negative control; all three are executable.
+- [x] **A8** Contradiction sweep completed: tracked Markdown links pass in all four repos;
+      Kate's pre-cluster status, NetworkPolicy scope and vmrun path were corrected;
+      ProvenancePipeline's dead `policies/verify/` scaffold and references were removed;
+      PAC's unavailable provider lock was refreshed from 6.57.0 to signed 6.57.1.
+- [x] **A9** `TrustStack/README.md` reconciled from `scripts/status.ps1 -Markdown`:
+      41/22/30/16 commits, 52 ADRs, ADR-005 inversion and active T9 stated.
+- [x] **A10** Agent instructions are vendor-neutral in all four siblings: `AGENTS.md` is
+      canonical and `CLAUDE.md` / `AGENT.md` are one-line pointers, with no duplicate copy.
+      Repo-specific validations passed before commits. Pushed in AwLZ `c6002c4`,
+      ProvenancePipeline `b04e72c`, KateClusters `242b5e1`, PontoAntiCrack `9ac2bfe`.
 
 ## B. PontoAntiCrack — the long pole
 
 Nothing here can be done by the overlooker: it needs `aws sso login`, which needs a browser.
-**Write the prompts; hand them over.**
+Prompts 08–10 are written and gated. Items stay open until the repo sessions produce real
+AWS evidence.
 
-- [ ] **B1** Write the apply prompt. `make build` → plan → apply with `dry_run = true`.
+- [ ] **B1** `make build` → plan → apply with `dry_run = true`. Delegated by prompt 08.
 - [ ] **B2** `aws events test-event-pattern` on all three patterns. **Gate.** Three
       load-bearing assumptions die here; a `false` means that detection is dead regardless of
       the 167 tests. Nothing downstream proceeds until this passes.
@@ -84,10 +85,18 @@ Nothing here can be done by the overlooker: it needs `aws sso login`, which need
 - [ ] **B7** Evidence written, demo GIF recorded.
 - [ ] **B8** Repo public.
 
+Delegation: B1–B2 → `prompts/08-pac-apply-pattern-gate.md`; B3–B4 →
+`prompts/09-pac-real-fixtures-and-dry-run.md`; B5–B8 →
+`prompts/10-pac-live-remediation-demo-public.md`.
+
 **Do not go past B4 into B5 without B3.** Live remediation with unconfirmed patterns is a
 system that may not fire, or may fire on the wrong resource, holding write access to AWS.
 
 ## C. AwLZ — evidence, not code
+
+Delegation: C1–C3 → `prompts/11-awlz-cost-and-cis-evidence.md`; C4–C5 →
+`prompts/12-awlz-risk-controls-and-ci.md`; C6–C7 →
+`prompts/13-awlz-demo-and-cost-actuals.md`.
 
 - [ ] **C1** Confirm GuardDuty member enrollment; `create-members` if auto-enable did not
       cover pre-existing accounts. The one control configured but never demonstrated.
@@ -106,6 +115,8 @@ system that may not fire, or may fire on the wrong resource, holding write acces
 - [ ] **C7** Demo GIF — the SCP denying from inside a member account is the strongest scene.
 
 ## D. KateClusters — nearly there
+
+Delegation: D1–D3 → `prompts/14-kate-demo-ci-public.md`.
 
 - [ ] **D1** Demo GIF. Terminal-native scenes: `kube-bench` delta, PSA rejecting with a real
       403, a Falco line firing. For the Grafana alert, query the API and show the state
