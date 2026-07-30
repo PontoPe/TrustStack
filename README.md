@@ -31,10 +31,10 @@ fourth is empty **on purpose**, because nothing has been proven there yet, and i
 
 | | Commits | Repo | Code | Proven against reality | Evidence |
 |---|---:|---|---|---|---|
-| **AwLZ** | 41 | public | 6 stacks applied to a live AWS org | ✅ SCPs probed, org trail delivering, 5 Config recorders | 3 verification docs |
+| **AwLZ** | 45 | public | 6 stacks applied to a live AWS org | ✅ SCPs probed, org trail delivering, 5 Config recorders | 3 verification docs |
 | **ProvenancePipeline** | 22 | public | CI + admission enforcement | ✅ signed image, attestations, Rekor, **4-case admission demo recorded** | 2 generated docs + GIF |
-| **KateClusters** | 30 | private | cluster built + hardened | ✅ CIS 12 FAIL → 0, 4 attack sims with real alerts | 2 kube-bench JSONs |
-| **PontoAntiCrack** | 16 | private | 3 detections, 167 tests | ❌ never applied, nothing detonated | empty, correctly |
+| **KateClusters** | 33 | private | cluster built + hardened; release owner active | ✅ CIS 12 FAIL → 0, 4 attack sims with real alerts | 2 kube-bench JSONs; demo in progress |
+| **PontoAntiCrack** | 21 | private | 3 detections, 171 tests; stable partial apply | ⚠️ 31 resources reconciled; quota blocks targets and detonation | empty, correctly |
 
 52 ADRs across the four. Every scanner suppression carries a written justification.
 
@@ -75,7 +75,8 @@ Two real dependencies, and both are one-directional:
 
 1. **PontoAntiCrack consumes AwLZ.** The org trail it reads and the lab account it detonates
    in are both AwLZ resources. It cannot be meaningfully built before AwLZ's logging exists —
-   and AwLZ's logging does exist, so PAC is unblocked as of now.
+   and AwLZ's logging exists. PAC is now blocked later in deployment by the regional Lambda
+   concurrency quota, not by its AwLZ prerequisite.
 2. **ProvenancePipeline enforces on KateClusters.** The Kyverno policy belongs to
    ProvenancePipeline; the cluster it admits into belongs to KateClusters. That integration
    is complete: one signed image is admitted and three deny paths are recorded.
@@ -167,11 +168,18 @@ CPU-anomaly signal for T2, kubescape/polaris unverified, no demo GIF.
 
 ### PontoAntiCrack — detection and response
 
-**Written, validated, never applied.** Three detections, each a complete unit: EventBridge
-pattern, Lambda handler, scoped IAM policy with **explicit denies**, README, fixtures, tests.
+**Validated and partially applied, then stopped safely.** Three detections, each a complete
+unit: EventBridge pattern, Lambda handler, scoped IAM policy with **explicit denies**,
+README, fixtures, tests.
 
-- 167 tests passing. Per detection: the pattern matches, the pattern **rejects the
+- 171 tests passing. Per detection: the pattern matches, the pattern **rejects the
   plausible-but-benign near-miss**, and the handler acts correctly against `moto`
+- Terraform tracks 31 stable resources. The three Lambdas are `Active/Successful` in
+  `lab`, `dry_run=true`, with zero EventBridge targets and zero taints. No technique was
+  detonated; Stratus v2.34.1 reports all 99 techniques `COLD`
+- The regional concurrency quota is 10. The design needs 25 to reserve 5 for each function
+  while leaving 10 unreserved. AWS rejects a request for 25 because the self-service
+  minimum is 1000, so no request was created and `awlz-lab` was released
 - Pipeline order is the security property and lives in exactly one place:
   `plan → exclusion tag → SNAPSHOT → circuit breaker → dry-run gate → apply → audit close →
   alert`. A handler implements `plan()` and `apply()` and nothing else, so it *cannot*
@@ -298,17 +306,16 @@ Traps that have each cost real time:
 
 ## 9. What is next
 
-The deep-work queue is already encoded as prompts 08–14, with the gate for each.
+One TrustStack overlooker coordinates one persistent owner per repository. Owner prompts
+15–18 replace manual phase-by-phase handoffs; prompt 19 hands the whole program to a new
+overlooker.
 
-| # | Work | Gate | Repo |
-|---|---|---|---|
-| 1 | Apply PAC in dry-run; authoritative test of all three patterns | prompt 08; any `false` stops | PontoAntiCrack |
-| 2 | Replace all 15 fixtures from observed CloudTrail; dry-run detonations | prompt 09; after pattern gate | PontoAntiCrack |
-| 3 | Live lab remediation, breaker, evidence, demo, public release | prompt 10; after real fixtures | PontoAntiCrack |
-| 4 | GuardDuty enrollment, Security Hub cost choice, CIS lab experiment | prompt 11; decide before ~27 Aug | AwLZ |
-| 5 | Permission boundaries/Config T5, break-glass T8, read-only CI roles | prompt 12 | AwLZ |
-| 6 | AwLZ demo and billing actuals | prompt 13; actuals need closed cycle | AwLZ |
-| 7 | Kate demo, real CI run, public release | prompt 14 | KateClusters |
+| Priority | Work | Gate | Owner |
+|---:|---|---|---|
+| 1 | Continue AwLZ C1–C7 | `awlz-lab` is released; prompt 16 may start | AwLZ |
+| 2 | Finish deterministic demo, real CI and public release | active owner holds VM `kate` until an explicit release marker | KateClusters |
+| 3 | Audit baseline and attempt B5/T9 | local work may start; VM phase waits for Kate | ProvenancePipeline |
+| 4 | Resume B1, then B2–B8 | operator must authorize quota 1000 or another AWS-supported path | PontoAntiCrack |
 
 **Do not enter live PAC remediation before the fixtures are real.** Turning on auto-remediation
 while the patterns are unconfirmed means a system that might not fire, or might fire on the
@@ -322,10 +329,10 @@ and `AlwaysPullImages` posture are explicit; stale state/path/ADR references cor
 `AGENTS.md` is canonical in all four repos; recording gates were added and deliberately
 tested in AwLZ, KateClusters and PontoAntiCrack.
 
-What remains is deep evidence work, not hygiene: demos in those three repos, public release
-for KateClusters and PontoAntiCrack, PAC's first real apply/evidence, and AwLZ's pending
-GuardDuty/CIS/cost controls. ProvenancePipeline's T9 visibility coupling remains an explicit,
-optional risk.
+What remains is deep evidence work, not hygiene: demos in AwLZ, KateClusters and PAC; public
+release for KateClusters and PAC; completion of PAC's quota-blocked apply/evidence; and
+AwLZ's pending GuardDuty/CIS/cost controls. ProvenancePipeline's T9 visibility coupling
+remains an explicit, optional risk.
 
 ---
 

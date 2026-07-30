@@ -27,9 +27,9 @@ Nothing here requires zero open gaps. See "Not incompleteness" below.
 | Layer | Code | Evidence | Demo | Public | Remaining |
 |---|---|---|---|---|---|
 | ProvenancePipeline | ✅ | ✅ | ✅ | ✅ | essentially none |
-| KateClusters | ✅ | ✅ | ❌ | ❌ | GIF, real CI run, go public |
+| KateClusters | ✅ | ✅ | in progress | ❌ | owner active: GIF, real CI run, go public |
 | AwLZ | ✅ | partial | ❌ | ✅ | GuardDuty/CIS/cost evidence, T5/T8 |
-| PontoAntiCrack | written only | ❌ | ❌ | ❌ | everything that makes it real |
+| PontoAntiCrack | partial apply | ❌ | ❌ | ❌ | Lambda quota, finish apply, then B2–B8 |
 
 Regenerate with `pwsh scripts/status.ps1 -Markdown`. Never type these numbers by hand.
 
@@ -71,7 +71,10 @@ Nothing here can be done by the overlooker: it needs `aws sso login`, which need
 Prompts 08–10 are written and gated. Items stay open until the repo sessions produce real
 AWS evidence.
 
-- [ ] **B1** `make build` → plan → apply with `dry_run = true`. Delegated by prompt 08.
+- [~] **B1** `make build` → plan → apply with `dry_run = true`. Partial apply is stable:
+      31 resources, three dry-run Lambdas, zero targets/taints. Blocked because the regional
+      Lambda quota is 10; the technical requirement is 25 but official self-service accepts
+      only a request of at least 1000. Details at PAC commit `86067a7`.
 - [ ] **B2** `aws events test-event-pattern` on all three patterns. **Gate.** Three
       load-bearing assumptions die here; a `false` means that detection is dead regardless of
       the 167 tests. Nothing downstream proceeds until this passes.
@@ -118,7 +121,8 @@ Delegation: C1–C3 → `prompts/11-awlz-cost-and-cis-evidence.md`; C4–C5 →
 
 Delegation: D1–D3 → `prompts/14-kate-demo-ci-public.md`.
 
-- [ ] **D1** Demo GIF. Terminal-native scenes: `kube-bench` delta, PSA rejecting with a real
+- [~] **D1** Demo GIF. Owner active on `codex/release-d1-d3`. Terminal-native scenes:
+      `kube-bench` delta, PSA rejecting with a real
       403, a Falco line firing. For the Grafana alert, query the API and show the state
       transition as JSON rather than screen-recording a browser — stronger evidence and
       re-recordable.
@@ -161,18 +165,17 @@ Prove what is built before closing any of these.
 | After every detonation | `stratus status` — a forgotten instance is ~USD 9/month against a USD 20 ceiling shared with AwLZ |
 | Before a billing cycle closes | C6 cannot be done earlier |
 
-## Suggested order
+## Current execution order
 
-Nothing below is blocked by anything else today.
-
-```
-A (overlooker, 1 session)
-  ├─> D1, D2, D3        KateClusters — short
-  ├─> B1..B8            PontoAntiCrack — the real remaining work, 3-4 sessions
-  └─> C1..C7            AwLZ — 1-2 sessions plus a billing wait
+```text
+PAC       paused at B1 quota decision; awlz-lab released
+AwLZ      may start C1–C7 now
+Kate      active at D1; holds VM kate
+Provenance local audit may run; VM phase waits for Kate release
 ```
 
-Estimate: **7 to 9 repo sessions**, plus overlooker passes between them.
+Owners are persistent; estimates are no longer session counts. The overlooker advances the
+next unblocked owner and reconciles this roadmap after every owner result.
 
 ## Autonomous owner entrypoints
 
@@ -181,6 +184,7 @@ phase prompts:
 
 | Repository | Owner prompt | Scope |
 |---|---|---|
+| TrustStack | `prompts/19-autonomous-overlooker.md` | Coordinate owners, leases, reporting and the minimal operator-intervention budget |
 | PontoAntiCrack | `prompts/15-pac-autonomous-owner.md` | B1–B8, including bounded lab detonation, remediation, demo and publication |
 | AwLZ | `prompts/16-awlz-autonomous-owner.md` | C1–C7, with a deterministic USD 20 cost rule and lab-only SCP experiment |
 | KateClusters | `prompts/17-kate-autonomous-owner.md` | D1–D3, including snapshot/recovery, demo, CI and publication |
