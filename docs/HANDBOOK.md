@@ -48,7 +48,7 @@ to publish a result that was less flattering than the one originally promised.
 
 | Repository | Commits | Public | Applied to | Evidence | Demo |
 |---|---:|---|---|---:|---|
-| **AwLZ** | 68 | ✅ | a live 5-account AWS organization | 5 | ✅ |
+| **AwLZ** | 69 | ✅ | a live 5-account AWS organization | 5 | ✅ |
 | **PontoAntiCrack** | 38 | ✅ | the isolated `awlz-lab` account | 5 | ✅ |
 | **KateClusters** | 43 | ✅ | a live single-node cluster on a VM | 2 | ✅ |
 | **ProvenancePipeline** | 24 | ✅ | GHCR + the KateClusters cluster | 2 | ✅ |
