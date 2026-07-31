@@ -1,9 +1,13 @@
 # TrustStack
 
-Portfolio handbook. Written 2026-07-30, from the repositories as they actually stand — every
+Portfolio summary. Written 2026-07-30, from the repositories as they actually stand — every
 number below was read out of a repo or a command, not carried over from a previous document.
 
 Four repositories, one thesis. Owner: Pedro (GitHub `PontoPe`).
+
+**The long-form account is [docs/HANDBOOK.md](docs/HANDBOOK.md)**: how the layers couple,
+what proving each one actually found, where the method runs out, and what is open on
+purpose. This file is the short version.
 
 ---
 
@@ -24,19 +28,20 @@ The unifying rule, and the reason this reads differently from a tutorial portfol
 > **The deliverable is not working infrastructure. It is reproducible infrastructure plus
 > evidence that the controls do what the documentation claims — including where they don't.**
 
-Every repo has a `docs/evidence/` directory. Three of the four have real artefacts in it. The
-fourth is empty **on purpose**, because nothing has been proven there yet, and it says so.
+Every repo has a `docs/evidence/` directory and all four now hold real artefacts. The fourth
+stayed empty **on purpose** until something had actually been measured there — filling it by
+hand would have discredited the other three.
 
 ## 2. Status
 
 | | Commits | Repo | Code | Proven against reality | Evidence |
 |---|---:|---|---|---|---|
-| **AwLZ** | 63 | public | 6 stacks applied to a live AWS org | ✅ SCPs probed, org trail delivering, 5 Config recorders, lab control experiment, break-glass alarm fired | 4 verification docs + GIF |
-| **ProvenancePipeline** | 22 | public | CI + admission enforcement | ✅ signed image, attestations, Rekor, **4-case admission demo recorded** | 2 generated docs + GIF |
-| **KateClusters** | 41 | public | cluster built + hardened; released | ✅ CIS 12 FAIL → 0, 4 attack sims with real alerts, CI green 5/5 | 2 kube-bench JSONs + GIF |
-| **PontoAntiCrack** | 36 | public | 3 detections, 185 tests; deployed and detonated | ✅ remediation measured at 5.97 s, circuit breaker tripped on purpose, two defects found by detonating | 4 artefacts + GIF |
+| **AwLZ** | 68 | public | 6 stacks applied to a live AWS org | ✅ SCPs probed, org trail delivering, 5 Config recorders, lab control experiment, break-glass alarm fired | 5 verification docs + GIF |
+| **ProvenancePipeline** | 24 | public | CI + admission enforcement | ✅ signed image, attestations, Rekor, **4-case admission demo recorded** | 2 generated docs + GIF |
+| **KateClusters** | 43 | public | cluster built + hardened; released | ✅ CIS 12 FAIL → 0, 4 attack sims with real alerts, CI green 5/5 | 2 kube-bench JSONs + GIF |
+| **PontoAntiCrack** | 38 | public | 3 detections, 185 tests; deployed and detonated | ✅ remediation measured at 5.97 s, circuit breaker tripped on purpose, two defects found by detonating | 5 artefacts + GIF |
 
-52 ADRs across the four. Every scanner suppression carries a written justification.
+56 ADRs across the four. Every scanner suppression carries a written justification.
 
 ## 3. How they interlock
 

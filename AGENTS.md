@@ -13,6 +13,7 @@ its own** and never will.
 |---|---|
 | `README.md` | The portfolio handbook — thesis, status, how the repos interlock, findings, cost |
 | `docs/ROADMAP.md` | **The durable plan.** What is left, what is done, and what is deliberately not being closed |
+| `docs/HANDBOOK.md` | The program-level account: how the layers couple, what proving each one found, what is open on purpose |
 | `docs/PROGRESS.md` | Where the last session stopped, if it stopped mid-item |
 | `prompts/` | The session prompts that built each repo, archived and reusable |
 | `scripts/status.ps1` | Reads the four repos and reports their real state |
