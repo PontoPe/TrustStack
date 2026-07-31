@@ -34,7 +34,7 @@ fourth is empty **on purpose**, because nothing has been proven there yet, and i
 | **AwLZ** | 63 | public | 6 stacks applied to a live AWS org | ✅ SCPs probed, org trail delivering, 5 Config recorders, lab control experiment, break-glass alarm fired | 4 verification docs + GIF |
 | **ProvenancePipeline** | 22 | public | CI + admission enforcement | ✅ signed image, attestations, Rekor, **4-case admission demo recorded** | 2 generated docs + GIF |
 | **KateClusters** | 41 | public | cluster built + hardened; released | ✅ CIS 12 FAIL → 0, 4 attack sims with real alerts, CI green 5/5 | 2 kube-bench JSONs + GIF |
-| **PontoAntiCrack** | 21 | private | 3 detections, 171 tests; stable partial apply | ⚠️ 31 resources reconciled; quota blocks targets and detonation | empty, correctly |
+| **PontoAntiCrack** | 36 | public | 3 detections, 185 tests; deployed and detonated | ✅ remediation measured at 5.97 s, circuit breaker tripped on purpose, two defects found by detonating | 4 artefacts + GIF |
 
 52 ADRs across the four. Every scanner suppression carries a written justification.
 
@@ -75,8 +75,9 @@ Two real dependencies, and both are one-directional:
 
 1. **PontoAntiCrack consumes AwLZ.** The org trail it reads and the lab account it detonates
    in are both AwLZ resources. It cannot be meaningfully built before AwLZ's logging exists —
-   and AwLZ's logging exists. PAC is now blocked later in deployment by the regional Lambda
-   concurrency quota, not by its AwLZ prerequisite.
+   and AwLZ's logging exists. The dependency ran in both directions in the end: AwLZ's
+   trail carried the events PAC detects, and AwLZ's permissions-boundary Config rule found
+   three PAC roles that predate it.
 2. **ProvenancePipeline enforces on KateClusters.** The Kyverno policy belongs to
    ProvenancePipeline; the cluster it admits into belongs to KateClusters. That integration
    is complete: one signed image is admitted and three deny paths are recorded.
@@ -210,8 +211,10 @@ regardless of the 167 tests.**
 
 This is the part that generalises, and the part worth protecting when it gets inconvenient.
 
-- **Empty is a valid state.** `PontoAntiCrack/docs/evidence/` is empty because nothing has
-  been proven there. Filling it by hand would discredit the other three repos.
+- **Empty was a valid state.** `PontoAntiCrack/docs/evidence/` stayed empty until something
+  had actually been proven there; filling it by hand would have discredited the other three
+  repos. It now holds four artefacts, and the two techniques that were never detonated still
+  have no numbers claimed for them.
 - **Negative tests are mandatory.** A pattern tested only for what it catches matches
   everything, forever, silently. PAC's CI fails a pattern test with no `assert not matches`.
   ProvenancePipeline's `verify` job fails if an *unsigned* digest verifies successfully.
@@ -320,14 +323,15 @@ overlooker.
 
 | Priority | Work | Gate | Owner |
 |---:|---|---|---|
-| 1 | Continue AwLZ C1–C7 | `awlz-lab` is released; prompt 16 may start | AwLZ |
-| 2 | Finish deterministic demo, real CI and public release | active owner holds VM `kate` until an explicit release marker | KateClusters |
-| 3 | Audit baseline and attempt B5/T9 | local work may start; VM phase waits for Kate | ProvenancePipeline |
-| 4 | Resume B1, then B2–B8 | operator must authorize quota 1000 or another AWS-supported path | PontoAntiCrack |
+| 1 | C6 cost actuals | Cost Explorer must stop returning `Estimated: true`; earliest 2026-08-02 | AwLZ |
+| 2 | *Optional.* Detonate `s3-public` and `iam-key-leak` | none; the lab is free | PontoAntiCrack |
+| 3 | *Optional.* Close E1 by pinning cosign 2.x | none | ProvenancePipeline |
 
-**Do not enter live PAC remediation before the fixtures are real.** Turning on auto-remediation
-while the patterns are unconfirmed means a system that might not fire, or might fire on the
-wrong resource, holding write access to AWS.
+**"Do not enter live PAC remediation before the fixtures are real" was the right rule.**
+Capturing real events and then detonating found two defects that every green gate had
+missed: a loop guard that trusted the caller-chosen session name, and a pattern that knew
+only one of the two CloudTrail encodings of `AuthorizeSecurityGroupIngress`. Live
+remediation before that would have run on a pattern that did not match the attack.
 
 ## 10. Cross-cutting pass
 
@@ -337,10 +341,11 @@ and `AlwaysPullImages` posture are explicit; stale state/path/ADR references cor
 `AGENTS.md` is canonical in all four repos; recording gates were added and deliberately
 tested in AwLZ, KateClusters and PontoAntiCrack.
 
-What remains is deep evidence work, not hygiene: demos in AwLZ, KateClusters and PAC; public
-release for KateClusters and PAC; completion of PAC's quota-blocked apply/evidence; and
-AwLZ's pending GuardDuty/CIS/cost controls. ProvenancePipeline's T9 visibility coupling
-remains an explicit, optional risk.
+All of that evidence work is now done: demos and public releases in all four repos, AwLZ's
+GuardDuty, CIS control experiment, T5/T8 controls and least-privilege CI, and PAC's
+deployment, detonation and measured remediation. What remains is AwLZ's cost actuals, which
+need a closed billing window. ProvenancePipeline's T9 visibility coupling remains an
+explicit, optional risk.
 
 ---
 

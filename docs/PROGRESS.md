@@ -10,23 +10,24 @@ for the next overlooker.
 
 ### PontoAntiCrack
 
-- CI was red on every push and neither cause was the quota: two shell gates were
-  committed mode 644, so the runner exited 126 before any gate ran, and
-  `aquasecurity/trivy-action@0.28.0` had stopped resolving. Both fixed; CI is green at
-  PAC `e796ecf`. The consequence worth noting is that the gate refusing a detection
-  without a negative test had never actually executed in CI.
-- `make patterns` now runs the B2 gate in one command against all fifteen fixtures.
-
-- Owner completed recovery and emitted `AMBIENTE: awlz-lab LIBERADO`.
-- B1 is partially applied, not complete. Terraform tracks 31 stable resources, including
-  three Lambdas in `lab` with `dry_run=true`; zero EventBridge targets and zero taints.
-- Stratus v2.34.1 integrity passed and all 99 techniques are `COLD`. No technique ran.
-- Lambda quota applied is 10. PAC needs 25 to keep 10 unreserved while reserving 5 for each
-  function. API and console reject 25 because their request minimum is the formal default
-  1000; no quota request exists.
-- Fix and handoff commits `5deef0b` and `86067a7` are pushed; PAC tree is clean.
-- Required operator decision: authorize a request for 1000 or choose another
-  AWS-supported path. Removing/reducing `reserved_concurrency = 5` is prohibited.
+- **B1–B8 complete; the repository is public.** The layer meets the definition of finished.
+- The Lambda concurrency quota was requested at 1000 and granted, which unblocked the
+  deferred wiring: 12 creates, 3 updates, no drift.
+- `make patterns`: seventeen fixtures, zero disagreements with EventBridge. Fifteen of
+  seventeen fixtures are recorded events.
+- `sg-open` detonated with Stratus Red Team v2.34.1. Live remediation revoked the
+  world-open SSH rule **5.97 s** after the attacker's API call and left port 443 alone;
+  the dry run before it changed nothing; the circuit breaker held after five actions.
+- Detonating found two defects that 176 green tests and a passing pattern gate had missed:
+  a loop guard reading the caller-chosen session name, so any attacker passing
+  `--role-session-name pac-…` was skipped; and a pattern that knew only one of the two
+  CloudTrail encodings of `AuthorizeSecurityGroupIngress`. Both fixed and written up.
+- CI was also repaired before any of this: two shell gates were mode 644, so every run
+  exited 126 before a gate executed, and `aquasecurity/trivy-action@0.28.0` had stopped
+  resolving.
+- The lab is clean and history was scrubbed of the lab account ID before publication.
+- Not claimed: `s3-public` and `iam-key-leak` were not detonated, so their remediation
+  latency is unmeasured; the Slack path is unproven because no webhook exists.
 
 ### KateClusters
 
@@ -78,38 +79,29 @@ should decide whether to adopt the boundary or record an exception.
 
 ## What finishing the program now requires
 
-Three of the four layers meet the definition of finished. PontoAntiCrack is the whole
-remaining program, and it is not blocked as thoroughly as the previous handoff implied.
+**All four layers meet the definition of finished** — code applied to real infrastructure,
+real artefacts in `docs/evidence/`, a demo with its cast, a threat model whose residual
+risks are stated, and a public repository.
 
-| Step | Needs the Lambda quota? | Needs an AWS session? |
+One item remains open in the whole program, and it is a calendar rather than work:
+
+| Item | Blocked on | Earliest |
 |---|---|---|
-| B2 — `test-event-pattern` on 3 patterns × 15 fixtures | no | yes |
-| B3 — capture real CloudTrail events, replace fixtures, re-run suite | no | yes |
-| B4 — Stratus detonation with `dry_run=true`, assert alert | **yes** | yes |
-| B5–B6 — live remediation, time-to-remediate, circuit breaker | **yes** | yes |
-| B7–B8 — evidence, demo, publication | no | only to regenerate evidence |
+| AwLZ **C6** — cost actuals | Cost Explorer still returns `Estimated: true` for every day this organization has existed | `2026-08-02T12:00:00-03:00`, for the 28 July–1 August window |
 
-B2 is the gate that carries the most risk in the whole portfolio: three load-bearing
-assumptions about CloudTrail event shape die there, and no unit test can settle them
-because the authoritative evaluator is the EventBridge service itself. It costs nothing,
-mutates nothing, and does not need the quota. It should be the first thing run.
-
-The quota blocks only the wiring: three Lambdas reserving 5 each, plus the 10 unreserved
-executions AWS enforces, needs an applied quota of 25 in `sa-east-1`. The applied value is
-10 and Service Quotas refuses any request below the formal default of 1000. Reducing or
-removing `reserved_concurrency = 5` would close this by deleting the control ADR-008
-exists to provide, and is prohibited.
+Optional and explicitly not required to finish: ProvenancePipeline **E1** (breaking the
+dependency on repository visibility by pinning cosign 2.x), and detonating PontoAntiCrack's
+other two techniques so `s3-public` and `iam-key-leak` get measured latencies too.
 
 ## Next concrete actions
 
-1. Start the ProvenancePipeline VM phase; `AMBIENTE: kate LIBERADA` has been emitted.
-2. Re-run the AwLZ C6 Cost Explorer query on or after `2026-08-02T12:00:00-03:00`. Do not
-   relabel an estimate as an actual.
-3. **Decided 2026-07-30: submit `L-B99A9384` in `sa-east-1` for 1000.** The operator
-   approved the recommendation; the request itself still needs an AWS session. A concurrency quota is a
-   ceiling, not a charge; `reserved_concurrency = 5` still caps PAC at 15 concurrent
-   executions, and the lab account runs nothing else that scales. The alternatives are worse:
-   Premium Support costs money, and dropping the reservation deletes the control ADR-008
-   exists to provide. Hand the AwLZ boundary finding above to that owner when it resumes.
-4. After each owner result, verify repo/evidence/cleanup, then update ROADMAP, README and
-   this file.
+1. On or after `2026-08-02T12:00:00-03:00`, run the AwLZ C6 Cost Explorer query in
+   `AwLZ/docs/cost.md`. If the API still says `Estimated: true`, record the refusal and
+   pick the next date. Do not relabel an estimate as an actual.
+2. Optional: detonate `s3-public` and `iam-key-leak` to measure their remediation latency.
+   The pattern gate and captured fixtures cover them; only the live number is missing.
+3. Optional: close ProvenancePipeline E1.
+4. Decide the PontoAntiCrack boundary finding: the AwLZ Config rule reports three
+   `pac-*-remediation` roles in `awlz-lab` as `NON_COMPLIANT` because they predate the
+   permissions boundary. Adopt the boundary or record an exception; the preventive SCP
+   already governs anything created from now on.

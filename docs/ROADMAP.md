@@ -29,10 +29,10 @@ Nothing here requires zero open gaps. See "Not incompleteness" below.
 | ProvenancePipeline | ✅ | ✅ | ✅ | ✅ | none; E1 is optional |
 | KateClusters | ✅ | ✅ | ✅ | ✅ | none |
 | AwLZ | ✅ | ✅ | ✅ | ✅ | C6 cost actuals, blocked until 2026-08-02 |
-| PontoAntiCrack | partial apply | ❌ | ❌ | ❌ | B2–B8; only B4 onward needs the Lambda quota |
+| PontoAntiCrack | ✅ | ✅ | ✅ | ✅ | none; two of three techniques undetonated |
 
-**Three of four layers meet the definition of finished.** PontoAntiCrack is the whole
-remaining program.
+**All four layers meet the definition of finished.** The only open item in the whole
+program is AwLZ C6, which is a billing window rather than work.
 
 Regenerate with `pwsh scripts/status.ps1 -Markdown`. Never type these numbers by hand.
 
@@ -74,42 +74,47 @@ Regenerate with `pwsh scripts/status.ps1 -Markdown`. Never type these numbers by
       Repo-specific validations passed before commits. Pushed in AwLZ `c6002c4`,
       ProvenancePipeline `b04e72c`, KateClusters `242b5e1`, PontoAntiCrack `9ac2bfe`.
 
-## B. PontoAntiCrack — the long pole
+## B. PontoAntiCrack — done
 
-Nothing here can be done by the overlooker: it needs `aws sso login`, which needs a browser.
-Prompts 08–10 are written and gated. Items stay open until the repo sessions produce real
-AWS evidence.
+Closed on 2026-07-30, from the quota request through to publication.
 
-- [~] **B1** `make build` → plan → apply with `dry_run = true`. Partial apply is stable:
-      31 resources, three dry-run Lambdas, zero targets/taints. Blocked because the regional
-      Lambda quota is 10; three functions reserving 5 each plus the enforced 10 unreserved
-      needs 25, and Service Quotas rejects any request below the formal default of 1000.
-      Details at PAC commit `86067a7`. **Decided 2026-07-30:** request the quota at 1000,
-      the only value self-service accepts. A concurrency quota is a ceiling rather than a
-      charge, and `reserved_concurrency = 5` keeps PAC at 15 concurrent executions
-      regardless. Awaiting an AWS session to submit.
-- [ ] **B2** `aws events test-event-pattern` on all three patterns, all 15 fixtures.
-      **Gate.** Three load-bearing assumptions die here; a `false` means that detection is
-      dead regardless of the 171 tests. **This does not need the quota** — it is a service
-      API call against committed fixtures and needs only an AWS session. Run it first.
-- [ ] **B3** Capture real CloudTrail events, replace all 15 fixtures, flip the provenance
-      markers, re-run the suite. **Also quota-independent**: it generates events with plain
-      API calls in the lab and reads them from the AwLZ organization trail. Only B4 onward
-      needs the Lambdas actually wired to EventBridge.
-- [ ] **B4** Detonate with Stratus, `dry_run` still true. Assert alert + audit snapshot +
-      resource unchanged.
-- [ ] **B5** `dry_run = false`, lab account only, re-detonate, measure time-to-remediate.
-- [ ] **B6** Trip the circuit breaker deliberately and watch it hold. A control never
-      observed working is a comment.
-- [ ] **B7** Evidence written, demo GIF recorded.
-- [ ] **B8** Repo public.
+- [x] **B1** Applied with `dry_run = true`. The regional Lambda concurrency quota was
+      raised from 10 to 1000 — the lowest value Service Quotas accepts — and the deferred
+      wiring then applied cleanly: 12 creates, 3 updates, no drift.
+- [x] **B2** `make patterns`: seventeen fixtures, zero disagreements with EventBridge. Run
+      first against documentation-derived fixtures and again against captured ones.
+- [x] **B3** Fifteen of seventeen fixtures are recorded events. The assumption flagged as
+      highest-risk held — CloudTrail emits `DeleteBucketPublicAccessBlock` — and real events
+      corrected five assumptions the tests around the patterns had encoded.
+- [x] **B4** `sg-open` detonated with Stratus Red Team v2.34.1 under `dry_run = true`: full
+      snapshot recorded, port 22 still open afterwards. Dry run means dry run.
+- [x] **B5** Live remediation revoked the world-open SSH rule **5.97 s** after the
+      attacker's API call and left the group's port 443 rule alone.
+- [x] **B6** Circuit breaker tripped on purpose: seven world-open ports in eighty seconds,
+      five actions allowed, four `BLOCKED` records, four ports deliberately left open.
+- [x] **B7** Evidence written — pattern gate, fixture capture, detonation write-up,
+      time-to-remediate — and the demo recorded with its cast.
+- [x] **B8** Repository public. History was scrubbed of the lab account ID first.
+
+**What detonating found that nothing else did.** Two defects survived 176 green tests, a
+pattern gate agreeing with EventBridge on every fixture, and fixtures captured from real
+CloudTrail. The loop guard tested the whole principal ARN, which contains the
+caller-chosen session name, so any attacker passing `--role-session-name pac-…` was
+skipped with a confident `SKIPPED`. And `AuthorizeSecurityGroupIngress` has two CloudTrail
+encodings — every fixture had been produced by the AWS CLI, so an attacker using the
+legacy top-level parameters was invisible. Both are fixed and written up in
+`docs/evidence/detonation-sg-open.md`.
+
+Still undetonated: `s3-public` and `iam-key-leak`, so their remediation latency is
+unmeasured and no number for them is claimed.
 
 Delegation: B1–B2 → `prompts/08-pac-apply-pattern-gate.md`; B3–B4 →
 `prompts/09-pac-real-fixtures-and-dry-run.md`; B5–B8 →
 `prompts/10-pac-live-remediation-demo-public.md`.
 
-**Do not go past B4 into B5 without B3.** Live remediation with unconfirmed patterns is a
-system that may not fire, or may fire on the wrong resource, holding write access to AWS.
+That ordering held in practice, and the reason it exists showed up exactly where it was
+predicted: B3 and B4 caught two defects that would have made B5 a live remediation running
+on a pattern that did not match the attack.
 
 ## C. AwLZ — evidence, not code
 
@@ -187,7 +192,7 @@ Prove what is built before closing any of these.
 ## Current execution order
 
 ```text
-PAC       B2 and B3 runnable as soon as an AWS session exists; B4-B8 need the quota
+PAC       B1-B8 complete and public; two of three techniques still undetonated
 AwLZ      C1-C5 and C7 merged; only C6 open, blocked until 2026-08-02
 Kate      D1-D3 complete and public; VM kate released
 Provenance complete; E1 optional and not required to finish
