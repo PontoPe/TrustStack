@@ -28,11 +28,12 @@ Nothing here requires zero open gaps. See "Not incompleteness" below.
 |---|---|---|---|---|---|
 | ProvenancePipeline | ✅ | ✅ | ✅ | ✅ | none; E1 is optional |
 | KateClusters | ✅ | ✅ | ✅ | ✅ | none |
-| AwLZ | ✅ | ✅ | ✅ | ✅ | C6 cost actuals, blocked until 2026-08-02 |
+| AwLZ | ✅ | ✅ | ✅ | ✅ | none |
 | PontoAntiCrack | ✅ | ✅ | ✅ | ✅ | none; two of three techniques undetonated |
 
-**All four layers meet the definition of finished.** The only open item in the whole
-program is AwLZ C6, which is a billing window rather than work.
+**All four layers meet the definition of finished, and C6 closed on 2026-08-04.** Nothing
+in the program is open on a deadline; what remains is optional work and the maintenance
+below.
 
 Regenerate with `pwsh scripts/status.ps1 -Markdown`. Never type these numbers by hand.
 
@@ -139,8 +140,11 @@ Delegation: C1–C3 → `prompts/11-awlz-cost-and-cis-evidence.md`; C4–C5 →
 - [x] **C5** `awlz-gha-plan-readonly` exists per member account. All six stacks — including
       `live/logging`, `live/detection` and `live/ci-oidc` — plan green in CI through OIDC
       with no administrator anywhere.
-- [ ] **C6** Cost actuals. Cost Explorer still returns `Estimated: true`; earliest defensible
-      retry is **2026-08-02T12:00:00-03:00** for the 28 Jul–1 Aug window.
+- [x] **C6** Cost actuals measured 2026-08-04 against the closed July window
+      (`Estimated: false`). Gross usage USD 1.4830, fully covered by credits, so the invoice
+      was zero — reported as gross because the net would understate the model by its whole
+      subject. August run rate USD 6.38/month against the USD 20 ceiling. Trials end in late
+      August, so **September is the first representative month**.
 - [x] **C7** Demo recorded, audited as text and inspected as pixels: the plan role allowed on
       a Config read and explicitly denied on a Config write by its boundary.
 
@@ -181,19 +185,58 @@ Prove what is built before closing any of these.
 
 ---
 
-## Time-sensitive
+## Maintenance — what goes stale, where, and what refreshes it
 
-| When | What |
-|---|---|
-| **~27 Aug 2026** | GuardDuty 30-day trial ends. The first invoice understates steady state. C2 must be decided before this |
-| After every detonation | `stratus status` — a forgotten instance is ~USD 9/month against a USD 20 ceiling shared with AwLZ |
-| Before a billing cycle closes | C6 cannot be done earlier |
+Three kinds of staleness. Only the first has dates.
+
+### 1. Clock-driven
+
+| When | What | Where | How to refresh |
+|---|---|---|---|
+| ~**27 Aug 2026** | GuardDuty's 30-day trial ends, and Security Hub's with it. Every cost figure before that date understates steady state | `AwLZ/docs/cost.md`, `AwLZ/README.md`, `TrustStack/README.md` | Nothing to do on the day; it only sets when the next measurement is meaningful |
+| **on/after 1 Sep 2026** | **September is the first representative month** — first with no credits *and* no trials. Re-run the closed-window query | `AwLZ/docs/cost.md` | The `get-cost-and-usage` command in that file, **with the `RECORD_TYPE` filter**; without it credits net usage to zero |
+| Each closed billing window | The run rate drifts as resources come and go | `AwLZ/docs/cost.md` | Same query; compare against the recorded delta table |
+| Whenever the CIS score is quoted | `cis-score.txt` is a timestamped snapshot, not a live value | `AwLZ/docs/evidence/cis-score.txt` | `make evidence` in AwLZ |
+| After any detonation | A forgotten Stratus instance is ~USD 9/month against a USD 20 ceiling | the lab account | `stratus status` — every technique must read `COLD` |
+
+### 2. Condition-driven
+
+No date; a change invalidates them. The authoritative list is
+[threat-model.md §9](threat-model.md#9-revisit-conditions): a fifth repository or any new
+coupling, a second operator, a new KateClusters namespace, either repository's visibility
+changing, the release workflow gaining an approval gate, or retention changing on either
+side of the audit/evidence boundary.
+
+Two more outside that model:
+
+| Condition | What it invalidates | Where |
+|---|---|---|
+| PontoAntiCrack's lab is left with `dry_run = false` | The lab remediates for real, continuously. That is the state the 5.97 s measurement was taken in, and it is deliberate — but it is a standing decision, not a fact | `PontoAntiCrack/docs/PROGRESS.md`; the value lives in the gitignored `infra/terraform.tfvars` |
+| A detection's behaviour changes | The recorded demo replays committed evidence and will keep showing the old behaviour happily | `*/docs/img/demo.gif` and `.cast`; re-record with each repo's `demo-record.sh` |
+
+### 3. Drift-driven
+
+Nothing breaks; the documents quietly stop describing the code.
+
+| What | Where | How to refresh |
+|---|---|---|
+| Commit counts, ADR counts, test counts, evidence counts | `TrustStack/README.md` §2, `docs/HANDBOOK.md` §3, each repo's handoff | `pwsh scripts/status.ps1`, and re-derive counts from the filesystem rather than from memory |
+| Pinned tool versions — terraform, tflint, trivy, checkov, aws-cli, cosign, Stratus, `agg`, asciinema | each repo's `docs/toolchain.md` or handbook | Bump deliberately; the pin is the point, so a bump is a decision and not housekeeping |
+| Pinned AWS provider version and lock files | `*/live/*/.terraform.lock.hcl`, `PontoAntiCrack/infra` | `terraform init -upgrade`; a provider version disappearing from the registry has happened here once already |
+| Third-party GitHub Action SHAs | every `.github/workflows/ci.yml` | Bump for security fixes. A tag would auto-update and that is exactly what the pin prevents |
+| Base image digests | `ProvenancePipeline/build/` | Digest-pinned means static: a new CVE against a shipped image surfaces only on rebuild. There is no scheduled re-scan, and that gap is declared |
+| `kube-bench` results and the CIS delta | `KateClusters/docs/cis-results.md` | Re-run after any cluster or Kubernetes version change |
+
+### What needs an AWS session
+
+Everything in §1 except the demo re-record. `aws sso login --profile mgmt`; sessions last
+twelve hours and should be ended with an explicit logout.
 
 ## Current execution order
 
 ```text
 PAC       B1-B8 complete and public; two of three techniques still undetonated
-AwLZ      C1-C5 and C7 merged; only C6 open, blocked until 2026-08-02
+AwLZ      C1-C7 complete; cost is a measured actual, not a projection
 Kate      D1-D3 complete and public; VM kate released
 Provenance complete; E1 optional and not required to finish
 ```

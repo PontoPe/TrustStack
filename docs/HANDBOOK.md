@@ -122,11 +122,15 @@ infrastructure, real artefacts in `docs/evidence/`, a demo GIF with its cast, a
 threat model whose residual risks are stated rather than implied, and a public
 repository. **All four layers meet it.**
 
-One item remains open in the whole program: AwLZ **C6**, cost actuals. AWS Cost
-Explorer still returns `Estimated: true` for every day this organization has
-existed, so the earliest defensible query is 2026-08-02. That is a billing
-window, not work — and inventing the number would have been the cheapest
-possible way to discredit everything else here.
+The last open item, AwLZ **C6**, closed on 2026-08-04 when the July window
+became billable. Cost is a measured actual now: gross usage USD 1.4830, fully
+covered by credits, and an August run rate of USD 6.38/month against a USD 20
+ceiling. It is reported gross, because the zero invoice would understate the
+model by everything it was meant to measure. See §12.
+
+**Nothing in the program is open on a deadline.** What remains is optional work
+and ordinary maintenance — what goes stale, where, and what refreshes it is
+[ROADMAP.md § Maintenance](ROADMAP.md#maintenance--what-goes-stale-where-and-what-refreshes-it).
 
 ---
 
@@ -754,7 +758,7 @@ have them.
 
 | Open | Condition that closes it |
 |---|---|
-| AwLZ cost actuals (C6) | A closed Cost Explorer window; earliest 2026-08-02 |
+| A *representative* cost month | September 2026 — the first with neither credits nor service trials. The July actual and the August run rate are both recorded, and both are labelled with what distorts them |
 | `s3-public` and `iam-key-leak` undetonated | A lab session per technique; their latency is unmeasured and no number is claimed |
 | ProvenancePipeline B5 / T9 | Pin cosign 2.x so enforcement stops depending on the repository staying public |
 | SLSA Build L2, not L3 | Delegate provenance generation to an isolated context |

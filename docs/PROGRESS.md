@@ -1,6 +1,6 @@
 # Program progress
 
-Last updated: 2026-07-30.
+Last updated: 2026-08-15.
 
 ## Current coordination state
 
@@ -58,8 +58,9 @@ for the next overlooker.
   reported, not modified.
 - C5: `awlz-gha-plan-readonly` per member account; all six stacks plan green in CI through
   OIDC with no administrator anywhere.
-- C6: earliest defensible Cost Explorer retry is `2026-08-02T12:00:00-03:00`, and only if
-  the API stops returning `Estimated: true`.
+- C6: **closed 2026-08-04.** The July window returned `Estimated: false`. Gross usage
+  USD 1.4830, credits covered all of it, August run rate USD 6.38/month against the USD 20
+  ceiling. Reported gross; the zero invoice would understate the model by its whole subject.
 - `awlz-lab` is released: all four SCPs are attached to both OUs, no direct attachments
   remain, and no plan, apply or experiment is in flight.
 
@@ -83,11 +84,13 @@ should decide whether to adopt the boundary or record an exception.
 real artefacts in `docs/evidence/`, a demo with its cast, a threat model whose residual
 risks are stated, and a public repository.
 
-One item remains open in the whole program, and it is a calendar rather than work:
+The last dated item closed on 2026-08-04. **Nothing in the program is open on a deadline.**
 
-| Item | Blocked on | Earliest |
-|---|---|---|
-| AwLZ **C6** — cost actuals | Cost Explorer still returns `Estimated: true` for every day this organization has existed | `2026-08-02T12:00:00-03:00`, for the 28 July–1 August window |
+What replaced it is maintenance rather than work, and it lives in
+[ROADMAP.md § Maintenance](ROADMAP.md#maintenance--what-goes-stale-where-and-what-refreshes-it):
+clock-driven items (September 2026 is the first cost month with neither credits nor service
+trials), condition-driven items (the revisit conditions in the program threat model), and
+drift-driven items (counts, pinned versions, action SHAs, base image digests).
 
 Optional and explicitly not required to finish: ProvenancePipeline **E1** (breaking the
 dependency on repository visibility by pinning cosign 2.x), and detonating PontoAntiCrack's
@@ -95,9 +98,10 @@ other two techniques so `s3-public` and `iam-key-leak` get measured latencies to
 
 ## Next concrete actions
 
-1. On or after `2026-08-02T12:00:00-03:00`, run the AwLZ C6 Cost Explorer query in
-   `AwLZ/docs/cost.md`. If the API still says `Estimated: true`, record the refusal and
-   pick the next date. Do not relabel an estimate as an actual.
+1. On or after 2026-09-01, re-run the AwLZ cost query for the August window — the first
+   month with neither credits nor service trials, and therefore the first representative
+   one. Use the `RECORD_TYPE` filter; without it credits net usage to zero and a healthy
+   Config recorder reads as USD 0.
 2. Optional: detonate `s3-public` and `iam-key-leak` to measure their remediation latency.
    The pattern gate and captured fixtures cover them; only the live number is missing.
 3. Optional: close ProvenancePipeline E1.
