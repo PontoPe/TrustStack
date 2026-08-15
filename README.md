@@ -37,10 +37,10 @@ hand would have discredited the other three.
 
 | | Commits | Repo | Code | Proven against reality | Evidence |
 |---|---:|---|---|---|---|
-| **AwLZ** | 69 | public | 6 stacks applied to a live AWS org | ✅ SCPs probed, org trail delivering, 5 Config recorders, lab control experiment, break-glass alarm fired, **first closed-window cost actual** | 5 verification docs + GIF |
-| **ProvenancePipeline** | 24 | public | CI + admission enforcement | ✅ signed image, attestations, Rekor, **4-case admission demo recorded** | 2 generated docs + GIF |
-| **KateClusters** | 43 | public | cluster built + hardened; released | ✅ CIS 12 FAIL → 0, 4 attack sims with real alerts, CI green 5/5 | 2 kube-bench JSONs + GIF |
-| **PontoAntiCrack** | 38 | public | 3 detections, 185 tests; deployed and detonated | ✅ remediation measured at 5.97 s, circuit breaker tripped on purpose, two defects found by detonating | 5 artefacts + GIF |
+| **AwLZ** | 73 | public | 6 stacks applied to a live AWS org | ✅ SCPs probed, org trail delivering, 5 Config recorders, lab control experiment, break-glass alarm fired, **first closed-window cost actual** | 5 verification docs + GIF |
+| **ProvenancePipeline** | 25 | public | CI + admission enforcement | ✅ signed image, attestations, Rekor, **4-case admission demo recorded** | 2 generated docs + GIF |
+| **KateClusters** | 44 | public | cluster built + hardened; released | ✅ CIS 12 FAIL → 0, 4 attack sims with real alerts, CI green 5/5 | 2 kube-bench JSONs + GIF |
+| **PontoAntiCrack** | 41 | public | 3 detections, 185 tests; deployed and detonated | ✅ remediation measured at 5.97 s, circuit breaker tripped on purpose, two defects found by detonating | 5 artefacts + GIF |
 
 56 ADRs across the four. Every scanner suppression carries a written justification.
 

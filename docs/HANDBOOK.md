@@ -11,8 +11,14 @@ will understand the program and all four subsystems without opening anything
 else; the per-repository handbooks add build-order detail and session history,
 not new concepts.
 
-Written **2026-07-30**, the day the last layer closed. Every number was read out
-of a repository or a command rather than carried over from an earlier document.
+Written **2026-07-30**, the day the last layer closed; cost re-measured
+2026-08-04 against the first billable window, and counts re-derived 2026-08-15.
+Every number was read out of a repository or a command rather than carried over
+from an earlier document.
+
+**Numbers in §3 drift with every commit.** What goes stale, where, and what
+refreshes it is
+[ROADMAP.md § Maintenance](ROADMAP.md#maintenance--what-goes-stale-where-and-what-refreshes-it).
 
 | Where to go next | For |
 |---|---|
@@ -110,10 +116,10 @@ Everything below is used later in this document. Skip what you know.
 
 | Repository | Commits | Public | Applied to | Evidence artefacts | Demo |
 |---|---:|---|---|---:|---|
-| **AwLZ** | 69 | ✅ | a live 5-account AWS organization | 5 | ✅ |
-| **PontoAntiCrack** | 38 | ✅ | the isolated `awlz-lab` account | 5 | ✅ |
-| **KateClusters** | 43 | ✅ | a live single-node cluster on a VM | 2 + 4 writeups | ✅ |
-| **ProvenancePipeline** | 24 | ✅ | GHCR and the KateClusters cluster | 2 | ✅ |
+| **AwLZ** | 73 | ✅ | a live 5-account AWS organization | 5 | ✅ |
+| **PontoAntiCrack** | 41 | ✅ | the isolated `awlz-lab` account | 5 | ✅ |
+| **KateClusters** | 44 | ✅ | a live single-node cluster on a VM | 2 + 4 writeups | ✅ |
+| **ProvenancePipeline** | 25 | ✅ | GHCR and the KateClusters cluster | 2 | ✅ |
 
 56 architecture decision records across the four.
 
