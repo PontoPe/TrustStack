@@ -1,6 +1,6 @@
 # Program progress
 
-Last updated: 2026-08-15.
+Last updated: 2026-08-15, after a live verification pass.
 
 ## Current coordination state
 
@@ -77,6 +77,29 @@ The AwLZ boundary Config rule reports `pac-sg-open-remediation`,
 `NON_COMPLIANT`: they were created before the boundary existed. Nothing is broken — the
 preventive SCP only governs roles created from now on — but the PontoAntiCrack owner
 should decide whether to adopt the boundary or record an exception.
+
+### Verification pass — 2026-08-15
+
+Three live checks, all against AWS rather than against a document.
+
+- **Lambda quota** `L-B99A9384`: `CASE_CLOSED`, granted 47 minutes after it was raised.
+  Applied and effective value 1000.
+- **Budget**: USD 3.093 actual against the USD 20 ceiling, 15%. No threshold fired; alerts
+  remain at 85% and 100% of actual plus 100% of forecast. August 1–15 gross usage is
+  USD 2.8364, so the run rate projected from three days held.
+- **GuardDuty sample findings** from the fixture capture were still unarchived sixteen days
+  on, two at severity 8. Now archived; zero unarchived findings organization-wide.
+
+Two things fell out of those checks that were not being looked for. AWS Config billed 300×
+less in August than in July, which reads like a stopped recorder and is instead the
+difference between first-time capture and steady state — all five recorders verified
+`recording: true` / `SUCCESS`. And a member account **cannot** archive its own GuardDuty
+findings when a delegated administrator exists, so taking a member account does not let an
+attacker clear the evidence about it. Both are written up in AwLZ.
+
+PontoAntiCrack has run with live remediation for sixteen days and its audit table holds the
+same ten records it held on 2026-07-31 — zero remediations, zero false positives, against an
+otherwise idle account.
 
 ## What finishing the program now requires
 
