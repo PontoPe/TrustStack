@@ -1,7 +1,8 @@
 # TrustStack
 
-Portfolio summary. Written 2026-07-30, from the repositories as they actually stand — every
-number below was read out of a repo or a command, not carried over from a previous document.
+Portfolio summary. Written 2026-07-30, cost section re-measured 2026-08-04 against the first
+closed billing window. Every number below was read out of a repo or a command, not carried
+over from a previous document.
 
 Four repositories, one thesis. Owner: Pedro (GitHub `PontoPe`).
 
@@ -36,7 +37,7 @@ hand would have discredited the other three.
 
 | | Commits | Repo | Code | Proven against reality | Evidence |
 |---|---:|---|---|---|---|
-| **AwLZ** | 69 | public | 6 stacks applied to a live AWS org | ✅ SCPs probed, org trail delivering, 5 Config recorders, lab control experiment, break-glass alarm fired | 5 verification docs + GIF |
+| **AwLZ** | 69 | public | 6 stacks applied to a live AWS org | ✅ SCPs probed, org trail delivering, 5 Config recorders, lab control experiment, break-glass alarm fired, **first closed-window cost actual** | 5 verification docs + GIF |
 | **ProvenancePipeline** | 24 | public | CI + admission enforcement | ✅ signed image, attestations, Rekor, **4-case admission demo recorded** | 2 generated docs + GIF |
 | **KateClusters** | 43 | public | cluster built + hardened; released | ✅ CIS 12 FAIL → 0, 4 attack sims with real alerts, CI green 5/5 | 2 kube-bench JSONs + GIF |
 | **PontoAntiCrack** | 38 | public | 3 detections, 185 tests; deployed and detonated | ✅ remediation measured at 5.97 s, circuit breaker tripped on purpose, two defects found by detonating | 5 artefacts + GIF |
@@ -90,6 +91,36 @@ Two real dependencies, and both are one-directional:
 Nothing else couples. AwLZ and KateClusters were built in parallel on purpose — one waits on
 AWS, the other never touches it.
 
+### What the couplings cost — [program threat model](docs/threat-model.md)
+
+Each repository carries its own threat model, and each is internally sound. Modelling the
+program **as a whole** produced eight threats that none of the four can see from the inside,
+because they live in the space between scopes rather than inside one. Five have no control
+yet, which the document says rather than implies. The three worth reading first:
+
+- **Nothing asserts the enforcement policy is still installed.** `verify-provenance` is
+  authored in ProvenancePipeline and runs in KateClusters. One repo's CI tests policy *files*;
+  the other's tests cluster *manifests*. `kubectl delete clusterpolicy verify-provenance`
+  disables admission control **while every gate in the program stays green.** Neither repo is
+  wrong; the check belongs to a boundary neither owns.
+- **One GitHub account is both infrastructure takeover and a signing capability.** AwLZ trusts
+  it to apply Terraform to a live organization; ProvenancePipeline trusts it as the Sigstore
+  identity a cluster enforces. Both models are individually correct and neither can see the
+  shared root. The gates are also asymmetric: Terraform apply is gated on a protected
+  environment, **image signing on a push to `main`** — the weaker gate guards the thing that
+  mints artifacts a cluster is configured to trust.
+- **Four "out of scope" declarations compose into one unowned asset.** Every repository
+  excludes operator endpoint security, correctly. That workstation holds the Identity Center
+  session, the GitHub credentials, the kubeconfig, and the SSH key to the cluster host — the
+  only asset from which all four layers are reachable, and the only one no model claims.
+
+And one structural finding with no threat ID: **the program has two disjoint evidence
+planes.** AwLZ and PontoAntiCrack share the org CloudTrail. KateClusters' Falco and audit
+telemetry terminate in a local Loki with no path into it. Both planes work and both have
+measured evidence — but no query spans them, so an attacker moving between the AWS
+organization and the cluster produces two unrelated halves of a story. The trade is defensible
+against a USD 20/month ceiling. Making it silently would not be.
+
 ---
 
 ## 4. Per project
@@ -119,8 +150,9 @@ controls, because no CIS v3.0.0 control reads an SCP. A benchmark score measures
 configuration; it cannot measure a preventive guardrail. The behavioural probes — denied,
 then allowed, then denied again — are what show the SCPs working.
 
-Open: cost actuals only. Cost Explorer still returns `Estimated: true` for every day this
-organization has existed; earliest defensible retry is 2026-08-02.
+Cost actuals closed 2026-08-04 — see §7. Open: a September actual, which is the first month
+outside the GuardDuty and Security Hub trials and therefore the first steady state this
+organization can honestly report.
 
 ### ProvenancePipeline — supply chain
 
@@ -271,32 +303,59 @@ service principal (Config calls as `config.amazonaws.com`, so the condition coul
 match), and AWS's own published CloudTrail bucket policy is wrong for ACL-disabled buckets
 because it requires `s3:x-amz-acl`, which `BucketOwnerEnforced` never sends.
 
-## 7. Cost, and the August cliff
+## 7. Cost — measured 2026-08-04
 
 One USD 20/month ceiling shared across everything, with alerts at 85% and 100% actual plus
-100% forecast.
+100% forecast. **This section is an actual, not a projection.** The July window closed and
+Cost Explorer returned `Estimated: false`; the working is in
+[AwLZ/docs/cost.md](../AwLZ/docs/cost.md).
 
-| Source | Monthly |
-|---|---|
-| AwLZ fixed (3 CMKs) | ~USD 3 |
-| AwLZ detection (GuardDuty, Config, Security Hub) | USD 11–36, projected |
-| PontoAntiCrack at rest | ~USD 2.35 |
-| KateClusters | USD 0 — local VM |
-| ProvenancePipeline | USD 0 — GitHub-hosted |
+| Source | July gross, closed | August run rate |
+|---|---|---|
+| AwLZ — 4 CMKs, S3, CloudTrail, Config | USD 1.47 | USD 4.67 |
+| PontoAntiCrack at rest — 1 CMK, 1 secret, 3 idle Lambdas | USD 0.02 | USD 1.40 |
+| Tax | — | USD 0.31 |
+| KateClusters | USD 0 — local VM | USD 0 |
+| ProvenancePipeline | USD 0 — GitHub-hosted | USD 0 |
+| **Total** | **USD 1.48** | **USD 6.38** |
 
-Three things converge:
+**July's invoice was USD 0.** Credits covered the entire USD 1.48 and stopped at the month
+boundary. Both numbers belong in the record: the net is what was paid, the gross is what the
+architecture costs, and only one of them is evidence about the design.
 
-1. **GuardDuty's 30-day trial ends around 27 August.** The first invoice will understate the
-   steady state. Do not read it as representative.
-2. **Security Hub at `auto_enable_standards = "DEFAULT"`** is projected USD 4–18 on its own,
-   because per-account CIS scoring is what the evidence needs. One line in
-   `live/detection/terraform.tfvars` is the lever.
-3. **A forgotten Stratus instance is ~USD 9/month.** Run `stratus status` after every
-   detonation session. That is the realistic way to blow the budget — not the stacks.
+Four things the measurement changed:
 
-Decide the Security Hub trade-off deliberately before the 100% alert arrives, rather than in
-response to it. Either accept a higher ceiling for the evidence, or turn the standard off and
-say so in `docs/cost.md`.
+1. **Credits are not a guardrail, and their expiry is silent.** They covered 100% of July.
+   The budget alarms watch spend, so they could not see the cliff — the spend they were set
+   against was being hidden by the thing that expired.
+2. **Config was over-projected 3×, and the reason generalises.** The estimate extrapolated
+   33 configuration items from a *deployment* day across a month. Config bills per recorded
+   item and per rule evaluation, and the boundary rules are change-triggered, so a quiet
+   month bills nothing — August has recorded zero. **Config cost tracks what the org does,
+   not how long it exists.** Neither USD 3.12 nor USD 0 is a steady state.
+3. **The KMS line matched exactly** — USD 4.00 for four keys, the only line the first closed
+   window confirmed outright. A fifth key exists org-wide, `alias/pac` in `awlz-lab`, and it
+   is PontoAntiCrack's. A consolidated KMS charge of USD 5.00 read against AwLZ's four-key
+   table looks like an error and is not.
+4. **Secrets Manager was missing from the model entirely** at USD 0.40/month — invisible
+   rather than estimated low, which is the worse of the two failures.
+
+The measurement trap, recorded because it produced a wrong answer first: **grouping Cost
+Explorer by `SERVICE` without filtering `RECORD_TYPE` nets credits into the same row as
+usage.** Every service reads USD 0 under that grouping, and a healthy Config recorder
+emitting 325 items is indistinguishable from a broken one.
+
+**The cliff has not landed.** GuardDuty's 30-day trial ends around 27 August and Security Hub
+is inside its own, so August bills at most four days of either. `get-cost-forecast` returns
+`DataUnavailableException` — the organization is too young to forecast. **September 2026 is
+the first representative month**, and nothing before it should be quoted as steady state.
+
+The Security Hub reduction is applied: `get-enabled-standards` on the management account
+returns `[]`, with CIS v3.0.0 retained in `awlz-security`.
+
+Still true, and still the realistic way to blow the budget: **a forgotten Stratus instance is
+~USD 9/month.** Run `stratus status` after every detonation session. Nothing in the four
+stacks comes close.
 
 ## 8. Environment
 
@@ -328,7 +387,8 @@ overlooker.
 
 | Priority | Work | Gate | Owner |
 |---:|---|---|---|
-| 1 | C6 cost actuals | Cost Explorer must stop returning `Estimated: true`; earliest 2026-08-02 | AwLZ |
+| ~~1~~ | ~~C6 cost actuals~~ | **Closed 2026-08-04.** July returned `Estimated: false`; §7 is an actual | AwLZ |
+| 1 | September cost actual | Must be a month outside the GuardDuty and Security Hub trials; earliest 2026-10-02 | AwLZ |
 | 2 | *Optional.* Detonate `s3-public` and `iam-key-leak` | none; the lab is free | PontoAntiCrack |
 | 3 | *Optional.* Close E1 by pinning cosign 2.x | none | ProvenancePipeline |
 
@@ -348,9 +408,11 @@ tested in AwLZ, KateClusters and PontoAntiCrack.
 
 All of that evidence work is now done: demos and public releases in all four repos, AwLZ's
 GuardDuty, CIS control experiment, T5/T8 controls and least-privilege CI, and PAC's
-deployment, detonation and measured remediation. What remains is AwLZ's cost actuals, which
-need a closed billing window. ProvenancePipeline's T9 visibility coupling remains an
-explicit, optional risk.
+deployment, detonation and measured remediation. AwLZ's cost actuals closed on 2026-08-04
+against the first closed billing window, and the delta against the superseded projection is
+kept in `AwLZ/docs/cost.md` rather than overwritten. What remains is a September actual —
+the first month outside two service trials. ProvenancePipeline's T9 visibility coupling
+remains an explicit, optional risk.
 
 ---
 
@@ -386,10 +448,15 @@ than the whole block.
 ## Reading order for someone new
 
 1. This file.
-2. The per-repo handoff: `AwLZ/docs/AwLZ-handbook.md`; others —
+2. [`docs/threat-model.md`](docs/threat-model.md) — the **program-level** model: STRIDE over
+   the seams between the four repositories, the twelve risks accepted across all of them, and
+   eight cross-boundary threats that no component model can see from the inside. Five of the
+   eight have no control yet, and say so.
+3. The per-repo handoff: `AwLZ/docs/AwLZ-handbook.md`; others —
    `docs/{PROVE,KATE,PAC}handoff.md`.
-3. `docs/architecture.md` in the repo you care about — read it before disagreeing with a
+4. `docs/architecture.md` in the repo you care about — read it before disagreeing with a
    design choice; the reasoning is probably already there.
-4. `docs/threat-model.md` — threats with likelihood, impact, and **residual risk**.
+5. The repo's own `docs/threat-model.md` — threats with likelihood, impact, and **residual
+   risk**. Authoritative inside its scope; the program model is authoritative between them.
 5. `docs/evidence/` — what was actually proven.
 6. `AGENTS.md` — conventions, environment traps, and the decisions not to relitigate.
