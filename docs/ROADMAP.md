@@ -143,8 +143,9 @@ Delegation: C1–C3 → `prompts/11-awlz-cost-and-cis-evidence.md`; C4–C5 →
 - [x] **C6** Cost actuals measured 2026-08-04 against the closed July window
       (`Estimated: false`). Gross usage USD 1.4830, fully covered by credits, so the invoice
       was zero — reported as gross because the net would understate the model by its whole
-      subject. August run rate USD 6.38/month against the USD 20 ceiling. Trials end in late
-      August, so **September is the first representative month**.
+      subject. August run rate USD 6.38/month against the USD 20 ceiling. **September, the
+      first representative month, closed at USD 7.03 gross / USD 7.31 invoiced** (measured
+      2026-10-08).
 - [x] **C7** Demo recorded, audited as text and inspected as pixels: the plan role allowed on
       a Config read and explicitly denied on a Config write by its boundary.
 
@@ -193,8 +194,9 @@ Three kinds of staleness. Only the first has dates.
 
 | When | What | Where | How to refresh |
 |---|---|---|---|
-| ~**27 Aug 2026** | GuardDuty's 30-day trial ends, and Security Hub's with it. Every cost figure before that date understates steady state | `AwLZ/docs/cost.md`, `AwLZ/README.md`, `TrustStack/README.md` | Nothing to do on the day; it only sets when the next measurement is meaningful |
-| **on/after 1 Sep 2026** | **September is the first representative month** — first with no credits *and* no trials. Re-run the closed-window query | `AwLZ/docs/cost.md` | The `get-cost-and-usage` command in that file, **with the `RECORD_TYPE` filter**; without it credits net usage to zero |
+| ~~27 Aug 2026~~ | ~~GuardDuty and Security Hub trials end~~ — **done**; the cliff was USD 0.95/month | — | — |
+| ~~on/after 1 Sep 2026~~ | ~~September actual~~ — **done 2026-10-08**: USD 7.31 invoiced, first steady-state month | `AwLZ/docs/cost.md` | — |
+| First month with real Terraform activity | Config and Security Hub are change-driven; September was quiet, so USD 7.31 is a floor. The busy-month upper bound is unmeasured | `AwLZ/docs/cost.md` | The `get-cost-and-usage` command in that file, **with the `RECORD_TYPE` filter**; without it credits net usage to zero |
 | Each closed billing window | The run rate drifts as resources come and go | `AwLZ/docs/cost.md` | Same query; compare against the recorded delta table |
 | Whenever the CIS score is quoted | `cis-score.txt` is a timestamped snapshot, not a live value | `AwLZ/docs/evidence/cis-score.txt` | `make evidence` in AwLZ |
 | After any detonation | A forgotten Stratus instance is ~USD 9/month against a USD 20 ceiling | the lab account | `stratus status` — every technique must read `COLD` |

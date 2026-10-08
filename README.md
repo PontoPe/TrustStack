@@ -150,9 +150,8 @@ controls, because no CIS v3.0.0 control reads an SCP. A benchmark score measures
 configuration; it cannot measure a preventive guardrail. The behavioural probes — denied,
 then allowed, then denied again — are what show the SCPs working.
 
-Cost actuals closed 2026-08-04 — see §7. Open: a September actual, which is the first month
-outside the GuardDuty and Security Hub trials and therefore the first steady state this
-organization can honestly report.
+Cost actuals closed 2026-08-04, and the first steady-state month — September 2026, outside
+both service trials — closed at USD 7.31 invoiced. See §7.
 
 ### ProvenancePipeline — supply chain
 
@@ -303,21 +302,23 @@ service principal (Config calls as `config.amazonaws.com`, so the condition coul
 match), and AWS's own published CloudTrail bucket policy is wrong for ACL-disabled buckets
 because it requires `s3:x-amz-acl`, which `BucketOwnerEnforced` never sends.
 
-## 7. Cost — measured 2026-08-04
+## 7. Cost — September 2026, the first steady-state month
 
 One USD 20/month ceiling shared across everything, with alerts at 85% and 100% actual plus
-100% forecast. **This section is an actual, not a projection.** The July window closed and
-Cost Explorer returned `Estimated: false`; the working is in
-[AwLZ/docs/cost.md](../AwLZ/docs/cost.md).
+100% forecast. **This section is an actual, not a projection.** Every window below closed
+with `Estimated: false`; the working is in [AwLZ/docs/cost.md](../AwLZ/docs/cost.md).
 
-| Source | July gross, closed | August run rate |
-|---|---|---|
-| AwLZ — 4 CMKs, S3, CloudTrail, Config | USD 1.47 | USD 4.67 |
-| PontoAntiCrack at rest — 1 CMK, 1 secret, 3 idle Lambdas | USD 0.02 | USD 1.40 |
-| Tax | — | USD 0.31 |
-| KateClusters | USD 0 — local VM | USD 0 |
-| ProvenancePipeline | USD 0 — GitHub-hosted | USD 0 |
-| **Total** | **USD 1.48** | **USD 6.38** |
+| Source | July gross | August run rate | **September, closed** |
+|---|---|---|---|
+| AwLZ — 4 CMKs, S3, CloudTrail, Config, GuardDuty, Security Hub | USD 1.47 | USD 4.67 | **USD 5.63** |
+| PontoAntiCrack at rest — 1 CMK, 1 secret, 3 idle Lambdas | USD 0.02 | USD 1.40 | **USD 1.40** |
+| Tax | — | USD 0.31 | **USD 0.28** |
+| KateClusters | USD 0 — local VM | USD 0 | USD 0 |
+| ProvenancePipeline | USD 0 — GitHub-hosted | USD 0 | USD 0 |
+| **Total** | **USD 1.48** | **USD 6.38** | **USD 7.31** |
+
+September is the first month with neither credits nor service trials: **USD 7.31 invoiced,
+37% of the ceiling**, against a 2026-07-30 projection of USD 13.73 gross.
 
 **July's invoice was USD 0.** Credits covered the entire USD 1.48 and stopped at the month
 boundary. Both numbers belong in the record: the net is what was paid, the gross is what the
@@ -331,7 +332,7 @@ Four things the measurement changed:
 2. **Config was over-projected 3×, and the reason generalises.** The estimate extrapolated
    33 configuration items from a *deployment* day across a month. Config bills per recorded
    item and per rule evaluation, and the boundary rules are change-triggered, so a quiet
-   month bills nothing — August has recorded zero. **Config cost tracks what the org does,
+   month bills almost nothing — September recorded 13 items, USD 0.04. **Config cost tracks what the org does,
    not how long it exists.** Neither USD 3.12 nor USD 0 is a steady state.
 3. **The KMS line matched exactly** — USD 4.00 for four keys, the only line the first closed
    window confirmed outright. A fifth key exists org-wide, `alias/pac` in `awlz-lab`, and it
@@ -345,10 +346,14 @@ Explorer by `SERVICE` without filtering `RECORD_TYPE` nets credits into the same
 usage.** Every service reads USD 0 under that grouping, and a healthy Config recorder
 emitting 325 items is indistinguishable from a broken one.
 
-**The cliff has not landed.** GuardDuty's 30-day trial ends around 27 August and Security Hub
-is inside its own, so August bills at most four days of either. `get-cost-forecast` returns
-`DataUnavailableException` — the organization is too young to forecast. **September 2026 is
-the first representative month**, and nothing before it should be quoted as steady state.
+**The trial cliff landed, and it was small.** GuardDuty and Security Hub left their trials
+around 27 August. In September, Security Hub billed 870 compliance checks — USD 0.87 against
+2,760 checks and USD 2.76 projected — and GuardDuty USD 0.08 against USD 0.25. Together USD
+0.95/month, not the USD 3.01 the model reserved. The projection's 2× re-evaluation margin was
+not used in a month with no changes. **USD 7.31 is a quiet-month figure**: Config and Security
+Hub are change-driven, and a month with real Terraform activity has not been measured.
+`get-cost-forecast` still fails (`InternalFailure` on 2026-10-08); the budget's own forecast
+for October is USD 6.34.
 
 The Security Hub reduction is applied: `get-enabled-standards` on the management account
 returns `[]`, with CIS v3.0.0 retained in `awlz-security`.
@@ -388,7 +393,7 @@ overlooker.
 | Priority | Work | Gate | Owner |
 |---:|---|---|---|
 | ~~1~~ | ~~C6 cost actuals~~ | **Closed 2026-08-04.** July returned `Estimated: false`; §7 is an actual | AwLZ |
-| 1 | September cost actual | Must be a month outside the GuardDuty and Security Hub trials; earliest 2026-10-02 | AwLZ |
+| ~~1~~ | ~~September cost actual~~ | **Closed 2026-10-08.** USD 7.31 invoiced, first steady-state month | AwLZ |
 | 2 | *Optional.* Detonate `s3-public` and `iam-key-leak` | none; the lab is free | PontoAntiCrack |
 | 3 | *Optional.* Close E1 by pinning cosign 2.x | none | ProvenancePipeline |
 
@@ -410,8 +415,8 @@ All of that evidence work is now done: demos and public releases in all four rep
 GuardDuty, CIS control experiment, T5/T8 controls and least-privilege CI, and PAC's
 deployment, detonation and measured remediation. AwLZ's cost actuals closed on 2026-08-04
 against the first closed billing window, and the delta against the superseded projection is
-kept in `AwLZ/docs/cost.md` rather than overwritten. What remains is a September actual —
-the first month outside two service trials. ProvenancePipeline's T9 visibility coupling
+kept in `AwLZ/docs/cost.md` rather than overwritten. The September actual — the first
+month outside two service trials — closed on 2026-10-08 at USD 7.31. ProvenancePipeline's T9 visibility coupling
 remains an explicit, optional risk.
 
 ---

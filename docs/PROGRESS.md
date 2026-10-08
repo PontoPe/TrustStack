@@ -1,6 +1,6 @@
 # Program progress
 
-Last updated: 2026-08-15, after a live verification pass.
+Last updated: 2026-10-08, after the September cost actual (AwLZ PR #17).
 
 ## Current coordination state
 
@@ -111,8 +111,7 @@ The last dated item closed on 2026-08-04. **Nothing in the program is open on a 
 
 What replaced it is maintenance rather than work, and it lives in
 [ROADMAP.md § Maintenance](ROADMAP.md#maintenance--what-goes-stale-where-and-what-refreshes-it):
-clock-driven items (September 2026 is the first cost month with neither credits nor service
-trials), condition-driven items (the revisit conditions in the program threat model), and
+clock-driven items (the September 2026 actual closed 2026-10-08 at USD 7.31 invoiced), condition-driven items (the revisit conditions in the program threat model), and
 drift-driven items (counts, pinned versions, action SHAs, base image digests).
 
 Optional and explicitly not required to finish: ProvenancePipeline **E1** (breaking the

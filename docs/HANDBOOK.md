@@ -131,7 +131,8 @@ repository. **All four layers meet it.**
 The last open item, AwLZ **C6**, closed on 2026-08-04 when the July window
 became billable. Cost is a measured actual now: gross usage USD 1.4830, fully
 covered by credits, and an August run rate of USD 6.38/month against a USD 20
-ceiling. It is reported gross, because the zero invoice would understate the
+ceiling. September 2026, the first month with neither credits nor service trials,
+closed at USD 7.31 invoiced (USD 7.03 gross usage). It is reported gross, because the zero invoice would understate the
 model by everything it was meant to measure. See §12.
 
 **Nothing in the program is open on a deadline.** What remains is optional work
@@ -764,7 +765,7 @@ have them.
 
 | Open | Condition that closes it |
 |---|---|
-| A *representative* cost month | September 2026 — the first with neither credits nor service trials. The July actual and the August run rate are both recorded, and both are labelled with what distorts them |
+| A *busy* cost month | September 2026 closed at USD 7.31 — the first representative month, but a quiet one. Config and Security Hub bill on change, so a month with real Terraform activity is the unmeasured upper bound |
 | `s3-public` and `iam-key-leak` undetonated | A lab session per technique; their latency is unmeasured and no number is claimed |
 | ProvenancePipeline B5 / T9 | Pin cosign 2.x so enforcement stops depending on the repository staying public |
 | SLSA Build L2, not L3 | Delegate provenance generation to an isolated context |
